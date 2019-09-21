@@ -1,0 +1,8 @@
+## Interface: 11302
+## Title: MonkeyStuff
+## Version: 0.1
+## Notes: Auto repair, -refill arrows, -sell junk
+## Author: Busymonkey
+## SavedVariables: MS_Safewords
+
+main.lua
