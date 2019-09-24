@@ -38,24 +38,11 @@ function MS_OnEvent(self, event, ...)
         MS_earnMoney = GetMoney()
         MS_timeMoneyChanged = time()
 
-        if (MS_Merchant == false) then 
-            if ((MS_timeMerchantClosed - time()) < (MS_timeMerchantClosed + MS_timePrintEarningsDelay)) then MonkeyStuff:PrintEarnings() end
-        end
+        if (MS_Merchant == true) then MonkeyStuff:PrintEarnings() end;
     end
 
-    if (event == "MERCHANT_CLOSED") then
-        if (AvoidDoubleCall == true) then AvoidDoubleCall = false return
-        else
-            MS_Merchant = false
+    if (event == "MERCHANT_CLOSED") then MS_Merchant = false; MS_junk = 0; end;
 
-            if (MS_junk > 0 and MS_curMoney < MS_earnMoney) then
-                AvoidDoubleCall = true
-                MS_timeMerchantClosed = time()
-
-                if (MS_timeMerchantClosed > MS_timeMoneyChanged) then MonkeyStuff:PrintEarnings() end
-            end
-        end
-    end
 end
 
 MS_Merchant_EventFrame:SetScript("OnEvent", MS_OnEvent);
@@ -63,8 +50,6 @@ MS_Merchant_EventFrame:SetScript("OnEvent", MS_OnEvent);
 
 function MonkeyStuff:SellJunk()
     if (MS_Merchant == true) then
-        if (UnitClass("player") == "Hunter") then MonkeyStuff:ArrowRefill() end;
-
         MS_junk = 0
 
         if (CanMerchantRepair()) then 
@@ -76,8 +61,9 @@ function MonkeyStuff:SellJunk()
         end
 
         for bag = 0, 4, 1 do
+
             local bagName = GetBagName(bag); local bagSlots = GetContainerNumSlots(bag); -- get bag name and amount of slots
-            if (string.find(bagName, "Quiver") or string.find(bagName, "Pouch")) then return end; -- don't look through Quivers/Pouches for items to sell
+            if (string.find(bagName, "Quiver") or string.find(bagName, "Pouch")) then quiverSlot = bag; return end; -- don't look through Quivers/Pouches for items to sell
 
             for slot = 1, bagSlots, 1 do
                 texture, count, locked, quality, readable, lootable, link, isFiltered, hasNoValue, itemID = GetContainerItemInfo(bag, slot)
@@ -100,8 +86,7 @@ function MonkeyStuff:SellJunk()
 end
 
 function MonkeyStuff:ArrowRefill()
-    local quiver = 4;
-    local freeSlots = GetContainerFreeSlots(quiver)
+    local freeSlots = GetContainerFreeSlots(quiverSlot)
 
     if (freeSlots[1] == nil) then return -- full on arrows -- WORKS! 23-09-2019
     else print("[MonkeyStuff] Not full on arrows.")
@@ -134,3 +119,27 @@ function MonkeyStuff:ShouldSellItem(_itemName, _itemType)
     return b_ShouldSell;
 
 end
+
+function MonkeyStuff:PrintAvailableCommands()
+    print("[MonkeyStuff] Type /ms 'item name' to add an item to the do-not-auto-sell-list (whitelist).")
+end
+
+
+local function HandleSlashCommands(msg)
+    if (#msg <= 1) then MonkeyStuff:PrintAvailableCommands() return
+    else
+        local command, item = strsplit(" ", msg, 2)
+
+        if (command == "add") then MS_Safewords[#MS_Safewords + 1] = item; print("Added '" .. item .. "' to whitelist!");
+        elseif (command == "remove") then 
+            for i = 1, #MS_Safewords, 1 do 
+                if (string.find(MS_Safewords[i], item)) then table.remove(MS_Safewords, i); print("Removed '" .. item .. "' from whitelist."); 
+                end;
+            end
+        elseif (command == "whitelist") then print("[MonkeyStuff]: Items on whitelist: "); print(unpack(MS_Safewords));
+        end
+    end;
+end
+
+SLASH_MonkeyStuff1 = "/ms";
+SlashCmdList.MonkeyStuff = HandleSlashCommands;
