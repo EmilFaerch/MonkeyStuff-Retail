@@ -20,14 +20,11 @@ MS_Merchant_EventFrame:RegisterEvent("PLAYER_MONEY");
 function MS_OnEvent(self, event, ...)
 
     if (event == "ADDON_LOADED" and ... == "MonkeyStuff") then
-        if (MS_Safewords == nil) then 
-            MS_Safewords = "Leather Hide Cloth";
-            print("Default Safewords loaded.");
-        else print("[MonkeyStuff] Loaded Safewords: " .. MS_Safewords)
-        end
 
-        if string.find("Leather Hide", "Silk Cloth") then print("Found Heavy Hide in Leather Hide")
-        else print("Nope.")
+        if (MS_Safewords == "nil") then 
+            MS_Safewords = {"Leather", "Hide", "Cloth", "Skinning Knife", "Troll Sweat"};
+            print("[MonkeyStuff] Default " .. #MS_Safewords .. " safewords loaded.");
+        else print("[MonkeyStuff] " .. #MS_Safewords .. " safewords loaded.");
         end
     end
 
@@ -42,7 +39,7 @@ function MS_OnEvent(self, event, ...)
         MS_timeMoneyChanged = time()
 
         if (MS_Merchant == false) then 
-            if (MS_timeMerchantClosed ~= 100 and (MS_timeMerchantClosed - time()) < (MS_timeMerchantClosed + MS_timePrintEarningsDelay)) then MonkeyStuff:PrintEarnings() end
+            if ((MS_timeMerchantClosed - time()) < (MS_timeMerchantClosed + MS_timePrintEarningsDelay)) then MonkeyStuff:PrintEarnings() end
         end
     end
 
@@ -59,7 +56,6 @@ function MS_OnEvent(self, event, ...)
             end
         end
     end
-
 end
 
 MS_Merchant_EventFrame:SetScript("OnEvent", MS_OnEvent);
@@ -67,6 +63,8 @@ MS_Merchant_EventFrame:SetScript("OnEvent", MS_OnEvent);
 
 function MonkeyStuff:SellJunk()
     if (MS_Merchant == true) then
+        if (UnitClass("player") == "Hunter") then MonkeyStuff:ArrowRefill() end;
+
         MS_junk = 0
 
         if (CanMerchantRepair()) then 
@@ -78,51 +76,61 @@ function MonkeyStuff:SellJunk()
         end
 
         for bag = 0, 4, 1 do
-            local bagName = GetBagName(bag);
+            local bagName = GetBagName(bag); local bagSlots = GetContainerNumSlots(bag); -- get bag name and amount of slots
             if (string.find(bagName, "Quiver") or string.find(bagName, "Pouch")) then return end; -- don't look through Quivers/Pouches for items to sell
 
-            for slot = 1, 16, 1 do
-                local texture, count, locked, quality, readable, lootable, link, isFiltered, hasNoValue, itemID = GetContainerItemInfo(bag, slot)
+            for slot = 1, bagSlots, 1 do
+                texture, count, locked, quality, readable, lootable, link, isFiltered, hasNoValue, itemID = GetContainerItemInfo(bag, slot)
 
-                if (quality == 0) then
-                    MS_junk = MS_junk + 1
-                    ShowContainerSellCursor(bag, slot)
-                    UseContainerItem(bag, slot)
-                end
+                if (itemID ~= nil) then
+                    itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice = GetItemInfo(itemID);
 
-                if (quality == 1) then 
-                    itemId = GetContainerItemID(bag, slot)
 
-                    if (itemID ~= nil) then itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice = GetItemInfo(itemID)
-                        if (itemType == "Consumable" or itemType == "Miscellaneous" or itemType == "Quest") then -- don't sell consumables 
-                        elseif (string.find(itemName, "Leather") or string.find(itemName, "Hide") or string.find(itemName, "Cloth") or string.find(itemName, "Skinning Knife")) then -- nor whitelisted items
-                        else
-                            MS_junk = MS_junk + 1;
-                            ShowContainerSellCursor(bag, slot);
-                            UseContainerItem(bag, slot);
+                    if (itemRarity < 2) then
+                        if (MonkeyStuff:ShouldSellItem(itemName, itemType)) then
+                            MS_junk = MS_junk + 1
+                            ShowContainerSellCursor(bag, slot)
+                            UseContainerItem(bag, slot)
                         end
                     end
-
                 end
             end
-        end        
-    end
-    if (UnitClass("player") == "Hunter") then MonkeyStuff:ArrowRefill() end
-end
-
-function MonkeyStuff:ArrowRefill()
-    if (MS_Merchant == true) then
-        local quiver = 4;
-        local freeSlots = GetContainerFreeSlots(quiver)
-
-        if (freeSlots[1] == nil) then return -- full on arrows
-        else print("[MonkeyStuff] Not full on arrows.")
-            -- Buy arrows
-
         end
     end
 end
 
+function MonkeyStuff:ArrowRefill()
+    local quiver = 4;
+    local freeSlots = GetContainerFreeSlots(quiver)
+
+    if (freeSlots[1] == nil) then return -- full on arrows -- WORKS! 23-09-2019
+    else print("[MonkeyStuff] Not full on arrows.")
+        -- Buy arrows
+
+    end
+end
+
 function MonkeyStuff:PrintEarnings()
-    print("[MonkeyStuff] Sold " .. MS_junk .. " item(s) [" .. GetCoinTextureString(MS_earnMoney - MS_curMoney) .. "]");
+    if (MS_junk > 0) then
+        print("[MonkeyStuff] Sold " .. MS_junk .. " item(s) [" .. GetCoinTextureString(MS_earnMoney - MS_curMoney) .. "]");
+    end
+end
+
+function MonkeyStuff:ShouldSellItem(_itemName, _itemType)
+
+    local b_ShouldSell = true;
+
+    if (_itemType == "Quest" or _itemType == "Consumable") then b_ShouldSell = false;
+    else b_ShouldSell = true;
+    end
+    
+    for i = 1, #MS_Safewords, 1 do
+        if (string.find(_itemName, MS_Safewords[i])) then
+            b_ShouldSell = false; 
+            break;
+        end
+    end
+
+    return b_ShouldSell;
+
 end

@@ -3,6 +3,6 @@
 ## Version: 0.1
 ## Notes: Auto repair, -refill arrows, -sell junk
 ## Author: Busymonkey
-## SavedVariables: MS_Safewords
+## SavedVariables: MS_Safewords, TestSaved
 
 main.lua
