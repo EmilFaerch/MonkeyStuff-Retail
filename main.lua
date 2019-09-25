@@ -29,6 +29,7 @@ function MS_OnEvent(self, event, ...)
     end
 
     if (event == "MERCHANT_SHOW") then
+        reportedEarnings = false;
         MS_curMoney = GetMoney()
         MS_Merchant = true
         MonkeyStuff:SellJunk()
@@ -38,10 +39,10 @@ function MS_OnEvent(self, event, ...)
         MS_earnMoney = GetMoney()
         MS_timeMoneyChanged = time()
 
-        if (MS_Merchant == true) then MonkeyStuff:PrintEarnings() end;
+        if (reportedEarnings == false) then MonkeyStuff:PrintEarnings() end;
     end
 
-    if (event == "MERCHANT_CLOSED") then MS_Merchant = false; MS_junk = 0; end;
+    if (event == "MERCHANT_CLOSED") then MS_Merchant = false; end;
 
 end
 
@@ -86,6 +87,7 @@ function MonkeyStuff:SellJunk()
 end
 
 function MonkeyStuff:ArrowRefill()
+    -- Check for class of "player"
     local freeSlots = GetContainerFreeSlots(quiverSlot)
 
     if (freeSlots[1] == nil) then return -- full on arrows -- WORKS! 23-09-2019
@@ -98,6 +100,8 @@ end
 function MonkeyStuff:PrintEarnings()
     if (MS_junk > 0) then
         print("[MonkeyStuff] Sold " .. MS_junk .. " item(s) [" .. GetCoinTextureString(MS_earnMoney - MS_curMoney) .. "]");
+        reportedEarnings = true;
+        MS_junk = 0;
     end
 end
 
@@ -121,7 +125,7 @@ function MonkeyStuff:ShouldSellItem(_itemName, _itemType)
 end
 
 function MonkeyStuff:PrintAvailableCommands()
-    print("[MonkeyStuff] Type /ms 'item name' to add an item to the do-not-auto-sell-list (whitelist).")
+    print("[MonkeyStuff] Type /ms (add | remove) 'item name' to add/remove an item to the dont-autosell list (whitelist).\nType '/ms whitelist' to see the whitelisted items.")
 end
 
 
