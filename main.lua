@@ -63,14 +63,14 @@ function MonkeyStuff:SellJunk()
 
         for bag = 0, 4, 1 do
 
-            local bagName = GetBagName(bag); local bagSlots = GetContainerNumSlots(bag); -- get bag name and amount of slots
-            if (string.find(bagName, "Quiver") or string.find(bagName, "Pouch")) then quiverSlot = bag; return end; -- don't look through Quivers/Pouches for items to sell
+            local bagName = GetBagName(bag); bagSlots = GetContainerNumSlots(bag, bagSlots); -- get bag name and amount of slots
+            if (string.find(bagName, "Quiver") or string.find(bagName, "Pouch")) then MonkeyStuff:RefillAmmo(bag); return end; -- don't look through Quivers/Pouches for items to sell
 
             for slot = 1, bagSlots, 1 do
-                texture, count, locked, quality, readable, lootable, link, isFiltered, hasNoValue, itemID = GetContainerItemInfo(bag, slot)
+                local texture, count, locked, quality, readable, lootable, link, isFiltered, hasNoValue, itemID = GetContainerItemInfo(bag, slot)
 
                 if (itemID ~= nil) then
-                    itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice = GetItemInfo(itemID);
+                    local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice = GetItemInfo(itemID);
 
 
                     if (itemRarity < 2) then
@@ -86,14 +86,29 @@ function MonkeyStuff:SellJunk()
     end
 end
 
-function MonkeyStuff:ArrowRefill()
+function MonkeyStuff:RefillAmmo(ammoBag)
     -- Check for class of "player"
-    local freeSlots = GetContainerFreeSlots(quiverSlot)
+    local freeSlots = GetContainerFreeSlots(ammoBag)
 
-    if (freeSlots[1] == nil) then return -- full on arrows -- WORKS! 23-09-2019
-    else print("[MonkeyStuff] Not full on arrows.")
-        -- Buy arrows
+    if (#freeSlots == 0) then return; -- full on arrows -- WORKS! 23-09-2019
+    else 
+        local texture, count, locked, quality, readable, lootable, link, isFiltered, hasNoValue, ammoItemID = GetContainerItemInfo(ammoBag, bagSlots);
+        local ammoName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice = GetItemInfo(ammoItemID);
+        local vendorItems = GetMerchantNumItems();
 
+        if (vendorItems > 0) then
+            for i = 1, vendorItems, 1 do 
+                local itemName, texture, price, quantity, numAvailable, isUsable, extendedCost = GetMerchantItemInfo(i)
+
+                if (ammoName == itemName) then 
+                    for j = 1, #freeSlots, 1 do
+                        BuyMerchantItem(i);
+                    end
+                    print("[MonkeyStuff] Refilled ammo.");
+                    return;
+                end
+            end
+        end
     end
 end
 
