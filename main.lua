@@ -92,6 +92,7 @@ function MonkeyStuff:RefillAmmo(ammoBag)
 
     if (#freeSlots == 0) then return; -- full on arrows -- WORKS! 23-09-2019
     else 
+        print("[MonkeyStuff] Refilling ammo.");
         local texture, count, locked, quality, readable, lootable, link, isFiltered, hasNoValue, ammoItemID = GetContainerItemInfo(ammoBag, bagSlots);
         local ammoName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice = GetItemInfo(ammoItemID);
         local vendorItems = GetMerchantNumItems();
@@ -104,7 +105,6 @@ function MonkeyStuff:RefillAmmo(ammoBag)
                     for j = 1, #freeSlots, 1 do
                         BuyMerchantItem(i);
                     end
-                    print("[MonkeyStuff] Refilled ammo.");
                     return;
                 end
             end
