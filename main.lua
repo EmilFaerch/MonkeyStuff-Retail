@@ -7,9 +7,6 @@ MS_earnMoney = 0;
 MS_junk = 0;
 MS_Merchant = false;
 MS_AvoidDoubleCall = true;
-MS_timeMerchantClosed = 100;
-MS_timeMoneyChanged = 100;
-MS_timePrintEarningsDelay = 2;
 
 local MS_Merchant_EventFrame = CreateFrame("Frame");
 MS_Merchant_EventFrame:RegisterEvent("ADDON_LOADED");
@@ -22,24 +19,24 @@ function MS_OnEvent(self, event, ...)
     if (event == "ADDON_LOADED" and ... == "MonkeyStuff") then
 
         if (MS_Safewords == "nil") then 
-            MS_Safewords = {"Leather", "Hide", "Cloth", "Skinning Knife", "Troll Sweat"};
+            MS_Safewords = {"Hearthstone", "Leather", "Hide", "Cloth", "Skinning Knife", "Fishing Pole"};
             print("[MonkeyStuff] Default " .. #MS_Safewords .. " safewords loaded.");
         else print("[MonkeyStuff] " .. #MS_Safewords .. " safewords loaded.");
         end
     end
 
     if (event == "MERCHANT_SHOW") then
+        MonkeyStuff:AutoRepair();
         reportedEarnings = false;
-        MS_curMoney = GetMoney()
-        MS_Merchant = true
-        MonkeyStuff:SellJunk()
+        MS_curMoney = GetMoney();
+        MS_Merchant = true;
+        MonkeyStuff:SellJunk();
     end
 
     if (event == "PLAYER_MONEY") then
-        MS_earnMoney = GetMoney()
-        MS_timeMoneyChanged = time()
+        if MS_Merchant == true then MS_earnMoney = GetMoney(); end;
 
-        if (reportedEarnings == false) then MonkeyStuff:PrintEarnings() end;
+        if (MS_junk > 0 and reportedEarnings == false) then MonkeyStuff:PrintEarnings() end;
     end
 
     if (event == "MERCHANT_CLOSED") then MS_Merchant = false; end;
@@ -48,18 +45,20 @@ end
 
 MS_Merchant_EventFrame:SetScript("OnEvent", MS_OnEvent);
 
+function MonkeyStuff:AutoRepair()
+    if (CanMerchantRepair()) then 
+        repairAllCost, canRepair = GetRepairAllCost()
+        if (canRepair) then
+            RepairAllItems() 
+            print("[MonkeyStuff] Paid " .. GetCoinTextureString(repairAllCost) .. " for repairs.")
+        end
+    end
+end
+
 
 function MonkeyStuff:SellJunk()
     if (MS_Merchant == true) then
         MS_junk = 0
-
-        if (CanMerchantRepair()) then 
-            repairAllCost, canRepair = GetRepairAllCost()
-            if (canRepair) then
-                RepairAllItems() 
-                print("[MonkeyStuff] Paid " .. GetCoinTextureString(repairAllCost) .. " for repairs.")
-            end
-        end
 
         for bag = 0, 4, 1 do
 
@@ -75,9 +74,9 @@ function MonkeyStuff:SellJunk()
 
                     if (itemRarity < 2) then
                         if (MonkeyStuff:ShouldSellItem(itemName, itemType)) then
-                            MS_junk = MS_junk + 1
                             ShowContainerSellCursor(bag, slot)
                             UseContainerItem(bag, slot)
+                            MS_junk = MS_junk + 1
                         end
                     end
                 end
@@ -86,63 +85,69 @@ function MonkeyStuff:SellJunk()
     end
 end
 
+function MonkeyStuff:ShouldSellItem(_itemName, _itemType)
+
+    local MS_b_ShouldSell = true;
+
+    if (_itemType == "Quest" or _itemType == "Consumable") then MS_b_ShouldSell = false;
+    else MS_b_ShouldSell = true;
+    end
+    
+    for i = 1, #MS_Safewords, 1 do
+        if (string.find(_itemName, MS_Safewords[i])) then
+            MS_b_ShouldSell = false; 
+            break;
+        end
+    end
+
+    return MS_b_ShouldSell;
+end
+
+function MonkeyStuff:PrintEarnings()
+    --if (MS_junk > 0) then
+        print("[MonkeyStuff] Sold " .. MS_junk .. " item(s) [" .. GetCoinTextureString(MS_earnMoney - MS_curMoney) .. "]");
+        reportedEarnings = true;
+        --MS_junk = 0;
+    --end
+end
+
 function MonkeyStuff:RefillAmmo(ammoBag)
-    -- Check for class of "player"
-    local freeSlots = GetContainerFreeSlots(ammoBag)
+    maxStackSize = 200
+    -- Check for class of "player" -- obsolete? Who else carries Ammo Bags?
+    local freeSlots = GetContainerFreeSlots(ammoBag) -- the amount of arrow stacks to buy
 
-    if (#freeSlots == 0) then return; -- full on arrows -- WORKS! 23-09-2019
-    else 
-        print("[MonkeyStuff] Refilling ammo.");
-        local texture, count, locked, quality, readable, lootable, link, isFiltered, hasNoValue, ammoItemID = GetContainerItemInfo(ammoBag, bagSlots);
-        local ammoName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice = GetItemInfo(ammoItemID);
-        local vendorItems = GetMerchantNumItems();
+    if (#freeSlots == 0) then -- full on (stacks of) arrows
+    else -- refill arrow stacks
+        local texture, count, locked, quality, readable, lootable, link, isFiltered, hasNoValue, ammoItemID = GetContainerItemInfo(ammoBag, bagSlots); -- what ammo are we using? (ID)
+        local ammoName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice = GetItemInfo(ammoItemID); -- get name of ammo
 
-        if (vendorItems > 0) then
-            for i = 1, vendorItems, 1 do 
+        local vendorItems = GetMerchantNumItems(); -- get vendor items
+        if (vendorItems > 0) then -- if vendor has any thing to sell
+            for i = 1, vendorItems, 1 do -- look through each item
                 local itemName, texture, price, quantity, numAvailable, isUsable, extendedCost = GetMerchantItemInfo(i)
 
-                if (ammoName == itemName) then 
-                    for j = 1, #freeSlots, 1 do
+                if (ammoName == itemName) then -- vendor has the ammo we are using?
+                    print("[MonkeyStuff] Refilling " .. ammoName .. "s.");
+                    
+                    local texture, ammoCount, locked, quality, readable, lootable, link, isFiltered, hasNoValue, ammoItemID = GetContainerItemInfo(ammoBag, #freeSlots + 1);
+
+                    -- fill up single stack of arrows (e.g 47 -> 200)
+                    stackSize = maxStackSize - ammoCount; -- returns 0 if full, otherwise returns amount of arrows missing for a full stack
+                    if (stackSize ~= 0) then BuyMerchantItem(i, stackSize); end
+
+                    for j = 1, #freeSlots, 1 do -- buy arrows equal to the amount of free slots
                         BuyMerchantItem(i);
                     end
-                    return;
+                    return; -- don't need to go through the other vendor items if already bought ammo
                 end
             end
         end
     end
 end
 
-function MonkeyStuff:PrintEarnings()
-    if (MS_junk > 0) then
-        print("[MonkeyStuff] Sold " .. MS_junk .. " item(s) [" .. GetCoinTextureString(MS_earnMoney - MS_curMoney) .. "]");
-        reportedEarnings = true;
-        MS_junk = 0;
-    end
-end
-
-function MonkeyStuff:ShouldSellItem(_itemName, _itemType)
-
-    local b_ShouldSell = true;
-
-    if (_itemType == "Quest" or _itemType == "Consumable") then b_ShouldSell = false;
-    else b_ShouldSell = true;
-    end
-    
-    for i = 1, #MS_Safewords, 1 do
-        if (string.find(_itemName, MS_Safewords[i])) then
-            b_ShouldSell = false; 
-            break;
-        end
-    end
-
-    return b_ShouldSell;
-
-end
-
 function MonkeyStuff:PrintAvailableCommands()
-    print("[MonkeyStuff] Type /ms (add | remove) 'item name' to add/remove an item to the dont-autosell list (whitelist).\nType '/ms whitelist' to see the whitelisted items.")
+    print("[MonkeyStuff] Available commands:\n# Type /ms (add | remove) 'item name' to add/remove an item to the dont-autosell list (whitelist).\n# Type '/ms whitelist' to see the whitelisted items.")
 end
-
 
 local function HandleSlashCommands(msg)
     if (#msg <= 1) then MonkeyStuff:PrintAvailableCommands() return
