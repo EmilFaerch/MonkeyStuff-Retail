@@ -160,7 +160,12 @@ local function HandleSlashCommands(msg)
                 if (string.find(MS_Safewords[i], item)) then table.remove(MS_Safewords, i); print("Removed '" .. item .. "' from whitelist."); 
                 end;
             end
-        elseif (command == "whitelist") then print("[MonkeyStuff]: Items on whitelist: "); print(unpack(MS_Safewords));
+        elseif (command == "whitelist") then print("[MonkeyStuff]: " .. #MS_Safewords .. " items on whitelist (apart from Consumables):"); 
+            str_whitelist = "";
+            for i = 1, #MS_Safewords, 1 do
+               str_whitelist = str_whitelist .. ' "' .. MS_Safewords[i] .. '", '
+            end
+            print(str_whitelist);
         end
     end;
 end
