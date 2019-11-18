@@ -17,12 +17,11 @@ MS_Merchant_EventFrame:RegisterEvent("PLAYER_MONEY");
 function MS_OnEvent(self, event, ...)
 
     if (event == "ADDON_LOADED" and ... == "MonkeyStuff") then
-
-        if (MS_Safewords == "nil") then 
-            MS_Safewords = {"Hearthstone", "Leather", "Hide", "Cloth", "Skinning Knife", "Fishing Pole"};
-            print("[MonkeyStuff] Default " .. #MS_Safewords .. " safewords loaded.");
-        else print("[MonkeyStuff] " .. #MS_Safewords .. " safewords loaded.");
-        end
+         if (MS_Safewords == "nil") then 
+            MS_Safewords = {"Hearthstone", "Leather", "Hide", "Cloth", "Skinning Knife", "Fishing Pole", "Blacksmith Hammer", "Arrow", "Bullet"};
+            print("[MonkeyStuff] " .. #MS_Safewords .. " default safewords loaded.");
+         else print("[MonkeyStuff] " .. #MS_Safewords .. " safewords loaded.");
+         end
     end
 
     if (event == "MERCHANT_SHOW") then
@@ -34,8 +33,6 @@ function MS_OnEvent(self, event, ...)
     end
 
     if (event == "PLAYER_MONEY") then
-        if MS_Merchant == true then MS_earnMoney = GetMoney(); end;
-
         if (MS_junk > 0 and reportedEarnings == false) then MonkeyStuff:PrintEarnings() end;
     end
 
@@ -59,6 +56,7 @@ end
 function MonkeyStuff:SellJunk()
     if (MS_Merchant == true) then
         MS_junk = 0
+        MS_sold = 0
 
         for bag = 0, 4, 1 do
 
@@ -77,6 +75,7 @@ function MonkeyStuff:SellJunk()
                             ShowContainerSellCursor(bag, slot)
                             UseContainerItem(bag, slot)
                             MS_junk = MS_junk + 1
+                            MS_sold = MS_sold + (itemSellPrice * count)
                         end
                     end
                 end
@@ -104,11 +103,8 @@ function MonkeyStuff:ShouldSellItem(_itemName, _itemType)
 end
 
 function MonkeyStuff:PrintEarnings()
-    --if (MS_junk > 0) then
-        print("[MonkeyStuff] Sold " .. MS_junk .. " item(s) [" .. GetCoinTextureString(MS_earnMoney - MS_curMoney) .. "]");
+        print("[MonkeyStuff] Vendored items for " .. GetCoinTextureString(MS_sold) .. ".");
         reportedEarnings = true;
-        --MS_junk = 0;
-    --end
 end
 
 function MonkeyStuff:RefillAmmo(ammoBag)
