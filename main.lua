@@ -6,22 +6,26 @@ MS_earnMoney = 0;
 
 MS_junk = 0;
 MS_Merchant = false;
-MS_AvoidDoubleCall = true;
+MS_farming = true;
+MS_curXP = 0;
 
 local MS_Merchant_EventFrame = CreateFrame("Frame");
 MS_Merchant_EventFrame:RegisterEvent("ADDON_LOADED");
+MS_Merchant_EventFrame:RegisterEvent("CHAT_MSG_COMBAT_XP_GAIN");
 MS_Merchant_EventFrame:RegisterEvent("MERCHANT_SHOW");
 MS_Merchant_EventFrame:RegisterEvent("MERCHANT_CLOSED");
 MS_Merchant_EventFrame:RegisterEvent("PLAYER_MONEY");
 
 function MS_OnEvent(self, event, ...)
-
+    
     if (event == "ADDON_LOADED" and ... == "MonkeyStuff") then
          if (MS_Safewords == "nil") then 
             MS_Safewords = {"Hearthstone", "Leather", "Hide", "Cloth", "Skinning Knife", "Fishing Pole", "Blacksmith Hammer", "Arrow", "Bullet"};
             print("[MonkeyStuff] " .. #MS_Safewords .. " default safewords loaded.");
          else print("[MonkeyStuff] " .. #MS_Safewords .. " safewords loaded.");
          end
+
+         MS_curXP = UnitXP("player");
     end
 
     if (event == "MERCHANT_SHOW") then
@@ -38,6 +42,22 @@ function MS_OnEvent(self, event, ...)
 
     if (event == "MERCHANT_CLOSED") then MS_Merchant = false; end;
 
+    if (event == "CHAT_MSG_COMBAT_XP_GAIN") then
+        if (MS_farming == true) then    
+            MS_XP = UnitXP("player")
+            MS_GainedXP = MS_XP - MS_curXP;
+            if (MS_GainedXP == 0) then return; end;
+
+            XPMax = UnitXPMax("player")
+
+            RemainingXP = XPMax - MS_curXP;
+            print(RemainingXP .. "XP to lvl (Gained " .. MS_GainedXP ..")");
+            print((RemainingXP / MS_GainedXP));
+            killsToLVL = ceil(RemainingXP / MS_GainedXP);
+
+            print("[MonkeyStuff]: " .. killsToLVL .. " kills remaining to lvl " .. (UnitLevel("player") + 1)); MS_curXP = MS_XP;
+        end;
+    end;
 end
 
 MS_Merchant_EventFrame:SetScript("OnEvent", MS_OnEvent);
@@ -162,7 +182,13 @@ local function HandleSlashCommands(msg)
                str_whitelist = str_whitelist .. ' "' .. MS_Safewords[i] .. '", '
             end
             print(str_whitelist);
-        end
+        elseif (command == "farm") then 
+            if (MS_farming == false) then print("[MonkeyStuff]: Farming mode activated"); MS_farming = true; 
+            else print("[MonkeyStuff]: Farming mode deactivated."); MS_farming = false;
+            end;
+
+            print(MS_farming);
+        end;
     end;
 end
 
