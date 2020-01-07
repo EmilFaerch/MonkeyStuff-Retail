@@ -19,7 +19,7 @@ MS_Merchant_EventFrame:RegisterEvent("PLAYER_MONEY");
 function MS_OnEvent(self, event, ...)
     
     if (event == "ADDON_LOADED" and ... == "MonkeyStuff") then
-         if (MS_Safewords == "nil") then 
+         if (MS_Safewords[1] == nil) then 
             MS_Safewords = {"Hearthstone", "Leather", "Hide", "Cloth", "Skinning Knife", "Fishing Pole", "Blacksmith Hammer", "Arrow", "Bullet"};
             print("[MonkeyStuff] " .. #MS_Safewords .. " default safewords loaded.");
          else print("[MonkeyStuff] " .. #MS_Safewords .. " safewords loaded.");
@@ -79,7 +79,6 @@ function MonkeyStuff:SellJunk()
         MS_sold = 0
 
         for bag = 0, 4, 1 do
-
             local bagName = GetBagName(bag); bagSlots = GetContainerNumSlots(bag, bagSlots); -- get bag name and amount of slots
             if (string.find(bagName, "Quiver") or string.find(bagName, "Pouch")) then MonkeyStuff:RefillAmmo(bag); return end; -- don't look through Quivers/Pouches for items to sell
 
@@ -89,7 +88,6 @@ function MonkeyStuff:SellJunk()
                 if (itemID ~= nil) then
                     local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice = GetItemInfo(itemID);
 
-
                     if (itemRarity < 2) then
                         if (MonkeyStuff:ShouldSellItem(itemName, itemType)) then
                             ShowContainerSellCursor(bag, slot)
@@ -98,28 +96,20 @@ function MonkeyStuff:SellJunk()
                             MS_sold = MS_sold + (itemSellPrice * count)
                         end
                     end
-                end
+                end                
             end
         end
     end
 end
 
 function MonkeyStuff:ShouldSellItem(_itemName, _itemType)
+    if (_itemType == "Quest" or _itemType == "Consumable") then return false; end
 
-    local MS_b_ShouldSell = true;
-
-    if (_itemType == "Quest" or _itemType == "Consumable") then MS_b_ShouldSell = false;
-    else MS_b_ShouldSell = true;
-    end
-    
-    for i = 1, #MS_Safewords, 1 do
-        if (string.find(_itemName, MS_Safewords[i])) then
-            MS_b_ShouldSell = false; 
-            break;
-        end
+    for index = 1, #MS_Safewords, 1 do
+        if (string.find(_itemName, MS_Safewords[index])) then return false; end
     end
 
-    return MS_b_ShouldSell;
+    return true; -- if haven't returned false, then return true
 end
 
 function MonkeyStuff:PrintEarnings()

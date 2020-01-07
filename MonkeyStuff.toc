@@ -1,7 +1,7 @@
 ## Interface: 11302
 ## Title: MonkeyStuff
 ## Version: 0.2
-## Notes: Auto repair, -refill arrows, -sell junk
+## Notes: Automatically repair, refill ammo, sell junk.
 ## Author: Busymonkey
 ## SavedVariables: MS_Safewords
 
