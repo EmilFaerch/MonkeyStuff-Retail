@@ -8,6 +8,8 @@ MS_junk = 0;
 MS_Merchant = false;
 MS_farming = true;
 MS_curXP = 0;
+MS_mailCurMoney = 0;
+MS_openedOnce = false;
 
 local MS_Merchant_EventFrame = CreateFrame("Frame");
 MS_Merchant_EventFrame:RegisterEvent("ADDON_LOADED");
@@ -15,6 +17,8 @@ MS_Merchant_EventFrame:RegisterEvent("CHAT_MSG_COMBAT_XP_GAIN");
 MS_Merchant_EventFrame:RegisterEvent("MERCHANT_SHOW");
 MS_Merchant_EventFrame:RegisterEvent("MERCHANT_CLOSED");
 MS_Merchant_EventFrame:RegisterEvent("PLAYER_MONEY");
+MS_Merchant_EventFrame:RegisterEvent("MAIL_SHOW");
+MS_Merchant_EventFrame:RegisterEvent("MAIL_CLOSED");
 
 function MS_OnEvent(self, event, ...)
     
@@ -51,11 +55,24 @@ function MS_OnEvent(self, event, ...)
             XPMax = UnitXPMax("player")
 
             RemainingXP = XPMax - MS_curXP;
-            print(RemainingXP .. "XP to lvl (Gained " .. MS_GainedXP ..")");
-            print((RemainingXP / MS_GainedXP));
+            -- print(RemainingXP .. "XP to lvl (Gained " .. MS_GainedXP ..")");
+            -- print((RemainingXP / MS_GainedXP));
             killsToLVL = ceil(RemainingXP / MS_GainedXP);
 
             print("[MonkeyStuff]: " .. killsToLVL .. " kills remaining to lvl " .. (UnitLevel("player") + 1)); MS_curXP = MS_XP;
+        end;
+    end;
+
+    -- PRINT GOLD PICKED UP FROM MAIL
+    if (event == "MAIL_SHOW") then MS_mailCurMoney = GetMoney(); end;
+
+    if (event == "MAIL_CLOSED") then newMoney = GetMoney();
+        if (MS_openedOnce == false) then MS_openedOnce = true;
+        else 
+            if (MS_mailCurMoney < newMoney) then
+                MS_openedOnce = false;
+                print("[MonkeyStuff]: Picked up " .. GetCoinTextureString(newMoney - MS_mailCurMoney) .. " from mailbox."); 
+            end;
         end;
     end;
 end
