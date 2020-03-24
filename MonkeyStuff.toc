@@ -3,6 +3,6 @@
 ## Version: 0.2
 ## Notes: Automatically repair, refill ammo, sell junk.
 ## Author: Busymonkey
-## SavedVariables: MS_Safewords
+## SavedVariables: MS_Safewords, MS_Reminder
 
 main.lua

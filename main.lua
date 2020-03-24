@@ -23,13 +23,22 @@ MS_Merchant_EventFrame:RegisterEvent("MAIL_CLOSED");
 function MS_OnEvent(self, event, ...)
     
     if (event == "ADDON_LOADED" and ... == "MonkeyStuff") then
-         if (MS_Safewords[1] == nil) then 
-            MS_Safewords = {"Hearthstone", "Leather", "Hide", "Cloth", "Skinning Knife", "Fishing Pole", "Blacksmith Hammer", "Arrow", "Bullet"};
-            print("[MonkeyStuff] " .. #MS_Safewords .. " default safewords loaded.");
-         else print("[MonkeyStuff] " .. #MS_Safewords .. " safewords loaded.");
-         end
+        if (MS_Safewords[1] == nil) then 
+        MS_Safewords = {"Hearthstone", "Leather", "Hide", "Cloth", "Skinning Knife", "Fishing Pole", "Blacksmith Hammer", "Arrow", "Bullet"};
+        MonkeyStuff:Print(#MS_Safewords .. " default safewords loaded.");
+        else MonkeyStuff:Print(#MS_Safewords .. " safewords loaded.");
+        end
 
-         MS_curXP = UnitXP("player");
+        -- -- REMINDER SYSTEM
+        if (MS_Reminder == nil) then 
+            MS_Reminder = "intet";
+        elseif (MS_Reminder == "intet") then
+        -- do nothing
+        else
+            MonkeyStuff:PrintReminder(true) 
+        end
+
+        MS_curXP = UnitXP("player");
     end
 
     if (event == "MERCHANT_SHOW") then
@@ -55,11 +64,10 @@ function MS_OnEvent(self, event, ...)
             XPMax = UnitXPMax("player")
 
             RemainingXP = XPMax - MS_curXP;
-            -- print(RemainingXP .. "XP to lvl (Gained " .. MS_GainedXP ..")");
-            -- print((RemainingXP / MS_GainedXP));
             killsToLVL = ceil(RemainingXP / MS_GainedXP);
 
-            print("[MonkeyStuff]: " .. killsToLVL .. " kills remaining to lvl " .. (UnitLevel("player") + 1)); MS_curXP = MS_XP;
+            MonkeyStuff:Print(killsToLVL .. " kills remaining to lvl " .. (UnitLevel("player") + 1)); 
+            MS_curXP = MS_XP;
         end;
     end;
 
@@ -71,7 +79,7 @@ function MS_OnEvent(self, event, ...)
         else 
             if (MS_mailCurMoney < newMoney) then
                 MS_openedOnce = false;
-                print("[MonkeyStuff]: Picked up " .. GetCoinTextureString(newMoney - MS_mailCurMoney) .. " from mailbox."); 
+                MonkeyStuff:Print("Picked up " .. GetCoinTextureString(newMoney - MS_mailCurMoney) .. " from mailbox."); 
             end;
         end;
     end;
@@ -79,16 +87,24 @@ end
 
 MS_Merchant_EventFrame:SetScript("OnEvent", MS_OnEvent);
 
+function MonkeyStuff:Print(msg)
+    print("[MonkeyStuff] " .. msg)
+end
+
+function MonkeyStuff:PrintReminder(showTip)
+    MonkeyStuff:Print("REMINDER: " .. MS_Reminder)
+    if (showTip) then print("Clear reminder by typing: /ms reminder clear") end
+end
+
 function MonkeyStuff:AutoRepair()
     if (CanMerchantRepair()) then 
         repairAllCost, canRepair = GetRepairAllCost()
         if (canRepair) then
             RepairAllItems() 
-            print("[MonkeyStuff] Paid " .. GetCoinTextureString(repairAllCost) .. " for repairs.")
+            MonkeyStuff:Print("Paid " .. GetCoinTextureString(repairAllCost) .. " for repairs.")
         end
     end
 end
-
 
 function MonkeyStuff:SellJunk()
     if (MS_Merchant == true) then
@@ -130,8 +146,8 @@ function MonkeyStuff:ShouldSellItem(_itemName, _itemType)
 end
 
 function MonkeyStuff:PrintEarnings()
-        print("[MonkeyStuff] Vendored items for " .. GetCoinTextureString(MS_sold) .. ".");
-        reportedEarnings = true;
+    MonkeyStuff:Print("Vendored items for " .. GetCoinTextureString(MS_sold) .. ".");
+    reportedEarnings = true;
 end
 
 function MonkeyStuff:RefillAmmo(ammoBag)
@@ -150,7 +166,7 @@ function MonkeyStuff:RefillAmmo(ammoBag)
                 local itemName, texture, price, quantity, numAvailable, isUsable, extendedCost = GetMerchantItemInfo(i)
 
                 if (ammoName == itemName) then -- vendor has the ammo we are using?
-                    print("[MonkeyStuff] Refilling " .. ammoName .. "s.");
+                    MonkeyStuff:Print("Refilling " .. ammoName .. "s.");
                     
                     local texture, ammoCount, locked, quality, readable, lootable, link, isFiltered, hasNoValue, ammoItemID = GetContainerItemInfo(ammoBag, #freeSlots + 1);
 
@@ -169,7 +185,10 @@ function MonkeyStuff:RefillAmmo(ammoBag)
 end
 
 function MonkeyStuff:PrintAvailableCommands()
-    print("[MonkeyStuff] Available commands:\n# Type /ms (add | remove) 'item name' to add/remove an item to the dont-autosell list (whitelist).\n# Type '/ms whitelist' to see the whitelisted items.")
+    MonkeyStuff:Print("Available commands:")
+    print("# Type /ms (add | remove) 'item name' to add/remove an item to the dont-autosell list (whitelist).")
+    print("# Type '/ms whitelist' to see the whitelisted items.")
+    print("# Type '/ms reminder ('some text' | clear) to display 'some text' on future logins, or 'clear' the reminder.")
 end
 
 local function HandleSlashCommands(msg)
@@ -183,18 +202,22 @@ local function HandleSlashCommands(msg)
                 if (string.find(MS_Safewords[i], item)) then table.remove(MS_Safewords, i); print("Removed '" .. item .. "' from whitelist."); 
                 end;
             end
-        elseif (command == "whitelist") then print("[MonkeyStuff]: " .. #MS_Safewords .. " items on whitelist (apart from Consumables):"); 
+        elseif (command == "whitelist") then MonkeyStuff:Print(#MS_Safewords .. " items on whitelist (apart from Consumables):"); 
             str_whitelist = "";
             for i = 1, #MS_Safewords, 1 do
                str_whitelist = str_whitelist .. ' "' .. MS_Safewords[i] .. '", '
             end
-            print(str_whitelist);
+            MonkeyStuff:Print(str_whitelist);
         elseif (command == "farm") then 
-            if (MS_farming == false) then print("[MonkeyStuff]: Farming mode activated"); MS_farming = true; 
-            else print("[MonkeyStuff]: Farming mode deactivated."); MS_farming = false;
-            end;
-
-            print(MS_farming);
+            if (MS_farming == false) then MonkeyStuff:Print("Farming mode activated"); MS_farming = true; 
+            else MonkeyStuff:Print("Farming mode deactivated."); MS_farming = false;
+            end
+        elseif (command == "reminder") then 
+            if (item == "clear") then MS_Reminder = "intet";
+            else
+                MS_Reminder = item; 
+                MonkeyStuff:PrintReminder(false);
+            end
         end;
     end;
 end
