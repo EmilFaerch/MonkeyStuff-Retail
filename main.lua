@@ -1,6 +1,10 @@
 MonkeyStuff = {};
 
-devMode = true;
+colorMain = "|cff89CFF0";
+colorMarked = "|cfffda82b";
+colorUnmarked = "|cffffffff";
+
+devMode = false;
 MS_ItemsMarkedForSale = {""};
 
 local MS_Merchant_EventFrame = CreateFrame("Frame");
@@ -8,7 +12,6 @@ MS_Merchant_EventFrame:RegisterEvent("ADDON_LOADED");
 MS_Merchant_EventFrame:RegisterEvent("MERCHANT_SHOW");
 MS_Merchant_EventFrame:RegisterEvent("AUCTION_HOUSE_SHOW");
 MS_Merchant_EventFrame:RegisterEvent("AUCTION_HOUSE_CLOSED");
-MS_Merchant_EventFrame:RegisterEvent("TOOLTIP_DATA_UPDATE");
 
 function MS_OnEvent(self, event, ...)
     MonkeyStuff:PrintDevMode("EVENT: " .. event);
@@ -47,12 +50,13 @@ function MonkeyStuff:AutoSellItems()
             local itemID = C_Container.GetContainerItemID(bag, slot)
             
             if (itemID ~= nil) then
-                local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice = GetItemInfo(itemID);
+                local itemName, itemLink, itemQuality, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice = GetItemInfo(itemID);
                 
-                MonkeyStuff:PrintDevMode("AutoSellItems() 2");  
                 -- MonkeyStuff:PrintDevMode(itemName .. ": " .. itemType .. ", " .. itemSubType);
-                -- can't trust that itemTypes nor itemSubType makes sense, so just rely on itemRarity I guess... (rather than also checking itemSubType == "Junk" or itemType == "Armor" or itemType == "Weapon")
-                if (ItemIsJunk(itemRarity) or ItemIsMarkedForSale(itemLink)) then
+                -- can't trust that itemTypes nor itemSubType makes sense, so just rely on itemQuality I guess... (rather than also checking itemSubType == "Junk" or itemType == "Armor" or itemType == "Weapon")
+
+                local itemIsMarked, _ = CheckItemMarkedForSale(itemLink);
+                if (ItemIsJunk(itemQuality) or itemIsMarked) then
                     junkSold = junkSold + 1;
                     C_Container.ShowContainerSellCursor(bag, slot)
                     C_Container.UseContainerItem(bag, slot)
@@ -61,45 +65,47 @@ function MonkeyStuff:AutoSellItems()
         end
     end
 
-    if (junkSold > 0) then MonkeyStuff:Print("Sold " .. junkSold .. " junk item(s)."); end;
+    if (junkSold > 0) then MonkeyStuff:Print("Selling " .. junkSold .. " junk item(s)."); end;
 end;
 
-function ItemIsJunk(itemRarity)
-    if itemRarity == "0" then return true else return false end;
+function ItemIsJunk(itemQuality)
+    if (itemQuality == 0) then return true else return false end;
 end;
 
 -- Display unit price if item is both stackable and sellable
-function MonkeyStuff:Tooltip_AddUnitPrice(tooltip)
-    local name, link = tooltip:GetItem()
-    local _,_,_,_,_,_,_,maxStack,_,_,unitPrice = GetItemInfo(link);
+function MonkeyStuff:Tooltip_AddUnitPrice(tooltip, maxStack, unitPrice)
     if (maxStack > 1 and unitPrice > 0) then
         tooltip:AddLine("Unit Price: " .. GetCoinTextureString(unitPrice), 1, 1, 1)
         tooltip:AddLine("|cffB2BEB5Max stack: " .. maxStack .. " (" .. GetCoinTextureString(unitPrice * maxStack) .. ")")
     end
 end;
 
-function MonkeyStuff:Tooltip_HandleMarkForSale(tooltip)
-    local itemName, itemLink = tooltip:GetItem()
+function MonkeyStuff:Tooltip_HandleMarkForSale(tooltip, itemQuality, unitPrice, itemLink)
+    if (ItemIsJunk(itemQuality) or unitPrice == 0) then return end;
 
     -- DON'T SHOW THIS ON EQUIPPED ITEMS!!!!
     -- local x = tooltip:IsEquippedItem();
     -- MonkeyStuff:PrintDevMode(x);
 
-    if (ItemIsMarkedForSale(itemLink)) then 
-        tooltip:AddLine("Marked for auto-sell. CTRL-Right click to unmark for auto-sell.");
+    local isMarkedForSale,_ = CheckItemMarkedForSale(itemLink);
+
+    if (isMarkedForSale) then 
+        tooltip:AddLine(colorMarked .. "Marked for auto-sell.\nShift-Right click to unmark.");
     else
-        tooltip:AddLine("CTRL-Right click to mark for auto-sell.");
+        tooltip:AddLine(colorUnmarked .. "Shift-Right click to mark for auto-sell.");
     end
 end
 
 function MonkeyStuff:HandleMarkForSale(itemLink)
     MonkeyStuff:PrintDevMode("HandleMarkForSale");
-    local isMarked, tableIndex = ItemIsMarkedForSale(itemLink);
-    MonkeyStuff:PrintDevMode("isMarked: " .. isMarked);
+    local isMarked, tableIndex = CheckItemMarkedForSale(itemLink)
+    MonkeyStuff:PrintDevMode("isMarked: " .. tostring(isMarked));
     if (isMarked) then 
         MonkeyStuff:UnmarkItemForSale(tableIndex)
+        MonkeyStuff:PrintDevMode("Unmarked item for auto-sell: " .. itemLink);
     else
         MonkeyStuff:MarkItemForSale(itemLink)
+        MonkeyStuff:PrintDevMode("Marked item for auto-sell: " .. itemLink);
     end
 end
 
@@ -120,39 +126,38 @@ function MonkeyStuff:UnmarkItemForSale(index)
 end
 
 function MonkeyStuff:ClearItemsMarkedForSale()
-    MS_ItemsMarkedForSale = {};
+    MS_ItemsMarkedForSale = {""};
 end
 
 --- ### CORE MARK FOR SALE FUNCTIONS START ###
 -- Mark item for sale!
 hooksecurefunc("HandleModifiedItemClick", function(itemLink, itemLocation)
-    if (itemLocation and itemLocation:IsBagAndSlot() and IsControlKeyDown()) then
+    if (itemLocation and itemLocation:IsBagAndSlot() and IsShiftKeyDown()) then
         MonkeyStuff:HandleMarkForSale(itemLink);
     end
 end);
 
 function ItemCanBeMarkedForSale(itemLink)
-    if (ItemIsMarkedForSale(itemLink) == false) then 
-
-        -- loop through something that you can't mark, e.g. Hearthstone and such I guess
-
-        MonkeyStuff:PrintDevMode("ItemCanBeMarkedForSale: TRUE");
-        return true;
+    if (CheckItemMarkedForSale(itemLink) == true) then 
+        MonkeyStuff:PrintDevMode("ItemCanBeMarkedForSale: FALSE");
+        return false;
     end;
 
-    MonkeyStuff:PrintDevMode("ItemCanBeMarkedForSale: FALSE");
-    return false;
+    -- loop through something that you can't mark, e.g. Hearthstone and such I guess
+    -- 
+
+    MonkeyStuff:PrintDevMode("ItemCanBeMarkedForSale: TRUE");
+    return true;
 end
 
-function ItemIsMarkedForSale(itemLink)
-    if (#MS_ItemsMarkedForSale == 0) then return false, 0 end;
+function CheckItemMarkedForSale(itemLink)
+    if (#MS_ItemsMarkedForSale == 0) then 
+        return false, 0 
+    end;
 
-    print("ItemIsMarkedForSale")
     local itemID = GetItemInfoFromHyperlink(itemLink)
-    print("ItemIsMarkedForSale: " .. itemID)
     for i = 1, #MS_ItemsMarkedForSale, 1 do
         if (itemID == MS_ItemsMarkedForSale[i]) then
-            print("ItemIsMarkedForSale: TRUE " .. itemID)
             return true, i;
         end
     end
@@ -163,8 +168,11 @@ end
 -- ### CORE FUNCTIONS START ###
 local function ModifyTooltip(tooltip, data)
     if tooltip == GameTooltip then
-        MonkeyStuff:Tooltip_AddUnitPrice(tooltip);
-        MonkeyStuff:Tooltip_HandleMarkForSale(tooltip);
+        local name, link = tooltip:GetItem();
+        local _,_,itemQuality,_,_,_,_,maxStack,_,_,unitPrice = GetItemInfo(link);
+
+        MonkeyStuff:Tooltip_AddUnitPrice(tooltip, maxStack, unitPrice);
+        MonkeyStuff:Tooltip_HandleMarkForSale(tooltip, itemQuality, unitPrice, link);
         tooltip:Show()
     end
 end
@@ -175,7 +183,7 @@ function MonkeyStuff:PrintAvailableCommands()
 end;
 
 function MonkeyStuff:Print(msg)
-    print("|cff89CFF0[MonkeyStuff]|r " .. msg)
+    print(colorMain .. "[MonkeyStuff]|r " .. msg)
 end;
 
 function MonkeyStuff:PrintDevMode(msg)
