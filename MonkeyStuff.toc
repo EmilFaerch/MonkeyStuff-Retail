@@ -1,7 +1,7 @@
 ## Interface: 100002
 ## Title: MonkeyStuff
-## Version: 0.1
-## Notes: Automatically repair, sell junk, display item's unit price in tooltip.
+## Version: 1.0
+## Notes: Automatically repair, auto-sell junk and specific items, display unit and stack price in tooltip.
 ## Author: Busymonkey
 
 main.lua
