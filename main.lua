@@ -42,7 +42,8 @@ end;
 
 function MonkeyStuff:AutoSellItems()
     MonkeyStuff:PrintDevMode("AutoSellItems()");
-    local junkSold = 0
+    junkSold = 0;
+    markedSold = 0;
     for bag = 0, 4, 1 do
         local bagSlots = C_Container.GetContainerNumSlots(bag);
 
@@ -52,12 +53,22 @@ function MonkeyStuff:AutoSellItems()
             if (itemID ~= nil) then
                 local itemName, itemLink, itemQuality, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice = GetItemInfo(itemID);
                 
-                -- MonkeyStuff:PrintDevMode(itemName .. ": " .. itemType .. ", " .. itemSubType);
                 -- can't trust that itemTypes nor itemSubType makes sense, so just rely on itemQuality I guess... (rather than also checking itemSubType == "Junk" or itemType == "Armor" or itemType == "Weapon")
 
+                local shouldSell = false;
                 local itemIsMarked, _ = CheckItemMarkedForSale(itemLink);
-                if (ItemIsJunk(itemQuality) or itemIsMarked) then
+
+                if (ItemIsJunk(itemQuality)) then
+                    shouldSell = true;
                     junkSold = junkSold + 1;
+                end
+
+                if (itemIsMarked) then
+                    shouldSell = true;
+                    markedSold = markedSold + 1;
+                end
+
+                if (shouldSell) then
                     C_Container.ShowContainerSellCursor(bag, slot)
                     C_Container.UseContainerItem(bag, slot)
                 end
@@ -65,7 +76,10 @@ function MonkeyStuff:AutoSellItems()
         end
     end
 
-    if (junkSold > 0) then MonkeyStuff:Print("Selling " .. junkSold .. " junk item(s)."); end;
+    if (shouldSell) then 
+        MonkeyStuff:Print("Sold " .. junkSold .. " junk and " .. markedSold .. " marked item(s)."); 
+        MonkeyStuff:ClearItemsMarkedForSale();
+    end;
 end;
 
 function ItemIsJunk(itemQuality)
@@ -97,28 +111,19 @@ function MonkeyStuff:Tooltip_HandleMarkForSale(tooltip, itemQuality, unitPrice, 
 end
 
 function MonkeyStuff:HandleMarkForSale(itemLink)
-    MonkeyStuff:PrintDevMode("HandleMarkForSale");
     local isMarked, tableIndex = CheckItemMarkedForSale(itemLink)
-    MonkeyStuff:PrintDevMode("isMarked: " .. tostring(isMarked));
     if (isMarked) then 
         MonkeyStuff:UnmarkItemForSale(tableIndex)
-        MonkeyStuff:PrintDevMode("Unmarked item for auto-sell: " .. itemLink);
     else
         MonkeyStuff:MarkItemForSale(itemLink)
-        MonkeyStuff:PrintDevMode("Marked item for auto-sell: " .. itemLink);
     end
 end
 
 function MonkeyStuff:MarkItemForSale(itemLink)
-    MonkeyStuff:PrintDevMode("MarkItemForSale: " .. itemLink);
+    if (ItemCanBeMarkedForSale(itemLink) == false) then return end;
 
-    if (ItemCanBeMarkedForSale(itemLink) == true) then 
-        local itemID = GetItemInfoFromHyperlink(itemLink)
-        MS_ItemsMarkedForSale[#MS_ItemsMarkedForSale + 1] = itemID; 
-        MonkeyStuff:PrintDevMode("Item marked for sale: " .. itemID .. " at index " .. #MS_ItemsMarkedForSale + 1);
-    else
-        MonkeyStuff:PrintDevMode("Could not mark item for sale: " .. itemLink);
-    end;
+    local itemID = GetItemInfoFromHyperlink(itemLink)
+    MS_ItemsMarkedForSale[#MS_ItemsMarkedForSale + 1] = itemID; 
 end
 
 function MonkeyStuff:UnmarkItemForSale(index)
@@ -138,15 +143,10 @@ hooksecurefunc("HandleModifiedItemClick", function(itemLink, itemLocation)
 end);
 
 function ItemCanBeMarkedForSale(itemLink)
-    if (CheckItemMarkedForSale(itemLink) == true) then 
-        MonkeyStuff:PrintDevMode("ItemCanBeMarkedForSale: FALSE");
-        return false;
-    end;
+    if (CheckItemMarkedForSale(itemLink) == true) then return false end;
 
-    -- loop through something that you can't mark, e.g. Hearthstone and such I guess
-    -- 
+    -- should loop through something that you can't mark, e.g. Hearthstone and such I guess
 
-    MonkeyStuff:PrintDevMode("ItemCanBeMarkedForSale: TRUE");
     return true;
 end
 
@@ -191,7 +191,6 @@ function MonkeyStuff:PrintDevMode(msg)
 end
 
 function HandleSlashCommands(msg)
-    MonkeyStuff:PrintDevMode("HandleSlashCommands: " .. msg)
     if (#msg <= 1) then MonkeyStuff:PrintAvailableCommands()
     else
         local command, item = strsplit(" ", msg, 2)
