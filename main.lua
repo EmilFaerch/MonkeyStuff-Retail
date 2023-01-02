@@ -54,20 +54,20 @@ function MonkeyStuff:AutoSellItems()
                 
                 -- can't trust that itemTypes nor itemSubType makes sense, so just rely on itemQuality I guess... (rather than also checking itemSubType == "Junk" or itemType == "Armor" or itemType == "Weapon")
 
-                local shouldSell = false;
+                local shouldSellItem = false;
                 local itemIsMarked, _ = CheckItemMarkedForSale(itemLink);
 
                 if (ItemIsJunk(itemQuality)) then
-                    shouldSell = true;
+                    shouldSellItem = true;
                     junkSold = junkSold + 1;
                 end
 
                 if (itemIsMarked) then
-                    shouldSell = true;
+                    shouldSellItem = true;
                     markedSold = markedSold + 1;
                 end
 
-                if (shouldSell) then
+                if (shouldSellItem) then
                     C_Container.ShowContainerSellCursor(bag, slot)
                     C_Container.UseContainerItem(bag, slot)
                 end
@@ -75,7 +75,7 @@ function MonkeyStuff:AutoSellItems()
         end
     end
 
-    if (shouldSell) then 
+    if (junkSold > 0 or markedSold > 0) then 
         MonkeyStuff:Print("Sold " .. junkSold .. " junk and " .. markedSold .. " marked item(s)."); 
         MonkeyStuff:ClearItemsMarkedForSale();
     end;
