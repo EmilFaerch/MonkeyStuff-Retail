@@ -17,7 +17,7 @@ function MS_OnEvent(self, event, ...)
     MonkeyStuff:PrintDevMode("EVENT: " .. event);
     
     if (event == "ADDON_LOADED" and ... == "MonkeyStuff") then
-        MonkeyStuff:Print("Loaded.");
+        MonkeyStuff:Initialize();
     end
 
     if (event == "MERCHANT_SHOW") then
@@ -27,6 +27,11 @@ function MS_OnEvent(self, event, ...)
 
 end;
 MonkeyStuff_EventFrame:SetScript("OnEvent", MS_OnEvent);
+
+function MonkeyStuff:Initialize()
+    MonkeyStuff:SetAllEquippedItemLevels();
+    MonkeyStuff:Print("Loaded.");
+end
 
 function MonkeyStuff:AutoRepair()
     MonkeyStuff:PrintDevMode("AutoRepair()");
@@ -210,6 +215,9 @@ SLASH_MonkeyStuff1 = "/ms";
 SlashCmdList.MonkeyStuff = HandleSlashCommands;
 -- ### CORE FUNCTIONS END ###
 
+local iLvlFontSize = 12;
+local iLvlTextType = "OUTLINE";
+
 local leftColumn = -238;
 local rightColumn = 43;
 
@@ -235,119 +243,139 @@ itemLevelFrame:SetPoint("CENTER", CharacterFrame)
 itemLevelFrame:SetFrameLevel(9000)
 
 -- LEFT COLUMN
-itemLevelFrame.textHead = itemLevelFrame:CreateFontString(nil, "OVERLAY") -- Add a text display widget (FontString)
-itemLevelFrame.textHead:SetFont("FONTS\\FRIZQT__.TTF", 12, "OUTLINE") -- General text settings
-itemLevelFrame.textHead:SetTextColor(1, 1, 0, 1) -- Yellow
-itemLevelFrame.textHead:SetPoint("CENTER", leftColumn, row1) -- Anchor the text display and make it the same size as the frame
-frameTextObjects[1] = itemLevelFrame.textHead;
+itemLevelFrame.textHead = itemLevelFrame:CreateFontString(nil, "OVERLAY")
+itemLevelFrame.textHead:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+itemLevelFrame.textHead:SetTextColor(1, 1, 0, 1)
+itemLevelFrame.textHead:SetPoint("CENTER", leftColumn, row1) 
+frameTextObjects[GetInventorySlotInfo("HeadSlot")] = itemLevelFrame.textHead;
 
-itemLevelFrame.textNeck = itemLevelFrame:CreateFontString(nil, "OVERLAY") -- Add a text display widget (FontString)
-itemLevelFrame.textNeck:SetFont("FONTS\\FRIZQT__.TTF", 12, "OUTLINE") -- General text settings
-itemLevelFrame.textNeck:SetTextColor(1, 1, 0, 1) -- Yellow
-itemLevelFrame.textNeck:SetPoint("CENTER", leftColumn, row2) -- Anchor the text display and make it the same size as the frame
-frameTextObjects[2] = itemLevelFrame.textNeck;
+itemLevelFrame.textNeck = itemLevelFrame:CreateFontString(nil, "OVERLAY")
+itemLevelFrame.textNeck:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+itemLevelFrame.textNeck:SetTextColor(1, 1, 0, 1)
+itemLevelFrame.textNeck:SetPoint("CENTER", leftColumn, row2) 
+frameTextObjects[GetInventorySlotInfo("NeckSlot")] = itemLevelFrame.textNeck;
 
-itemLevelFrame.textShoulders = itemLevelFrame:CreateFontString(nil, "OVERLAY") -- Add a text display widget (FontString)
-itemLevelFrame.textShoulders:SetFont("FONTS\\FRIZQT__.TTF", 12, "OUTLINE") -- General text settings
-itemLevelFrame.textShoulders:SetTextColor(1, 1, 0, 1) -- Yellow
-itemLevelFrame.textShoulders:SetPoint("CENTER", leftColumn, row3) -- Anchor the text display and make it the same size as the frame
-frameTextObjects[3] = itemLevelFrame.textShoulders;
+itemLevelFrame.textShoulders = itemLevelFrame:CreateFontString(nil, "OVERLAY")
+itemLevelFrame.textShoulders:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+itemLevelFrame.textShoulders:SetTextColor(1, 1, 0, 1)
+itemLevelFrame.textShoulders:SetPoint("CENTER", leftColumn, row3) 
+frameTextObjects[GetInventorySlotInfo("ShoulderSlot")] = itemLevelFrame.textShoulders;
 
-itemLevelFrame.textBack= itemLevelFrame:CreateFontString(nil, "OVERLAY") -- Add a text display widget (FontString)
-itemLevelFrame.textBack:SetFont("FONTS\\FRIZQT__.TTF", 12, "OUTLINE") -- General text settings
-itemLevelFrame.textBack:SetTextColor(1, 1, 0, 1) -- Yellow
-itemLevelFrame.textBack:SetPoint("CENTER", leftColumn, row4) -- Anchor the text display and make it the same size as the frame
-frameTextObjects[4] = itemLevelFrame.textBack;
+itemLevelFrame.textBack= itemLevelFrame:CreateFontString(nil, "OVERLAY")
+itemLevelFrame.textBack:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+itemLevelFrame.textBack:SetTextColor(1, 1, 0, 1)
+itemLevelFrame.textBack:SetPoint("CENTER", leftColumn, row4) 
+frameTextObjects[GetInventorySlotInfo("BackSlot")] = itemLevelFrame.textBack;
 
-itemLevelFrame.textChest = itemLevelFrame:CreateFontString(nil, "OVERLAY") -- Add a text display widget (FontString)
-itemLevelFrame.textChest:SetFont("FONTS\\FRIZQT__.TTF", 12, "OUTLINE") -- General text settings
-itemLevelFrame.textChest:SetTextColor(1, 1, 0, 1) -- Yellow
-itemLevelFrame.textChest:SetPoint("CENTER", leftColumn, row5) -- Anchor the text display and make it the same size as the frame
-frameTextObjects[5] = itemLevelFrame.textChest;
+itemLevelFrame.textChest = itemLevelFrame:CreateFontString(nil, "OVERLAY")
+itemLevelFrame.textChest:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+itemLevelFrame.textChest:SetTextColor(1, 1, 0, 1)
+itemLevelFrame.textChest:SetPoint("CENTER", leftColumn, row5) 
+frameTextObjects[GetInventorySlotInfo("ChestSlot")]= itemLevelFrame.textChest;
 
-itemLevelFrame.textWrist = itemLevelFrame:CreateFontString(nil, "OVERLAY") -- Add a text display widget (FontString)
-itemLevelFrame.textWrist:SetFont("FONTS\\FRIZQT__.TTF", 12, "OUTLINE") -- General text settings
-itemLevelFrame.textWrist:SetTextColor(1, 1, 0, 1) -- Yellow
-itemLevelFrame.textWrist:SetPoint("CENTER", leftColumn, row8) -- Anchor the text display and make it the same size as the frame
-frameTextObjects[6] = itemLevelFrame.textWrist;
+itemLevelFrame.textShirt = itemLevelFrame:CreateFontString(nil, "OVERLAY")
+itemLevelFrame.textShirt:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+itemLevelFrame.textShirt:SetTextColor(1, 1, 0, 1)
+itemLevelFrame.textShirt:SetPoint("CENTER", leftColumn, row6) 
+frameTextObjects[GetInventorySlotInfo("ShirtSlot")] = itemLevelFrame.textShirt;
+
+itemLevelFrame.textTabard = itemLevelFrame:CreateFontString(nil, "OVERLAY")
+itemLevelFrame.textTabard:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+itemLevelFrame.textTabard:SetTextColor(1, 1, 0, 1)
+itemLevelFrame.textTabard:SetPoint("CENTER", leftColumn, row5) 
+frameTextObjects[GetInventorySlotInfo("TabardSlot")]= itemLevelFrame.textTabard;
+
+itemLevelFrame.textWrist = itemLevelFrame:CreateFontString(nil, "OVERLAY")
+itemLevelFrame.textWrist:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+itemLevelFrame.textWrist:SetTextColor(1, 1, 0, 1)
+itemLevelFrame.textWrist:SetPoint("CENTER", leftColumn, row8) 
+frameTextObjects[GetInventorySlotInfo("WristSlot")] = itemLevelFrame.textWrist;
 
 -- RIGHT COLUMN
-itemLevelFrame.textGloves = itemLevelFrame:CreateFontString(nil, "OVERLAY") -- Add a text display widget (FontString)
-itemLevelFrame.textGloves:SetFont("FONTS\\FRIZQT__.TTF", 12, "OUTLINE") -- General text settings
-itemLevelFrame.textGloves:SetTextColor(1, 1, 0, 1) -- Yellow
-itemLevelFrame.textGloves:SetPoint("CENTER", rightColumn, row1) -- Anchor the text display and make it the same size as the frame
-frameTextObjects[7] = itemLevelFrame.textGloves;
+itemLevelFrame.textGloves = itemLevelFrame:CreateFontString(nil, "OVERLAY")
+itemLevelFrame.textGloves:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+itemLevelFrame.textGloves:SetTextColor(1, 1, 0, 1)
+itemLevelFrame.textGloves:SetPoint("CENTER", rightColumn, row1) 
+frameTextObjects[GetInventorySlotInfo("HandsSlot")] = itemLevelFrame.textGloves;
 
-itemLevelFrame.textBelt= itemLevelFrame:CreateFontString(nil, "OVERLAY") -- Add a text display widget (FontString)
-itemLevelFrame.textBelt:SetFont("FONTS\\FRIZQT__.TTF", 12, "OUTLINE") -- General text settings
-itemLevelFrame.textBelt:SetTextColor(1, 1, 0, 1) -- Yellow
-itemLevelFrame.textBelt:SetPoint("CENTER", rightColumn, row2) -- Anchor the text display and make it the same size as the frame
-frameTextObjects[8] = itemLevelFrame.textBelt;
+itemLevelFrame.textBelt= itemLevelFrame:CreateFontString(nil, "OVERLAY")
+itemLevelFrame.textBelt:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+itemLevelFrame.textBelt:SetTextColor(1, 1, 0, 1)
+itemLevelFrame.textBelt:SetPoint("CENTER", rightColumn, row2) 
+frameTextObjects[GetInventorySlotInfo("WaistSlot")] = itemLevelFrame.textBelt;
 
-itemLevelFrame.textLegs = itemLevelFrame:CreateFontString(nil, "OVERLAY") -- Add a text display widget (FontString)
-itemLevelFrame.textLegs:SetFont("FONTS\\FRIZQT__.TTF", 12, "OUTLINE") -- General text settings
-itemLevelFrame.textLegs:SetTextColor(1, 1, 0, 1) -- Yellow
-itemLevelFrame.textLegs:SetPoint("CENTER", rightColumn, row3) -- Anchor the text display and make it the same size as the frame
-frameTextObjects[9] = itemLevelFrame.textLegs;
+itemLevelFrame.textLegs = itemLevelFrame:CreateFontString(nil, "OVERLAY")
+itemLevelFrame.textLegs:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+itemLevelFrame.textLegs:SetTextColor(1, 1, 0, 1)
+itemLevelFrame.textLegs:SetPoint("CENTER", rightColumn, row3) 
+frameTextObjects[GetInventorySlotInfo("LegsSlot")] = itemLevelFrame.textLegs;
 
-itemLevelFrame.textFeet = itemLevelFrame:CreateFontString(nil, "OVERLAY") -- Add a text display widget (FontString)
-itemLevelFrame.textFeet:SetFont("FONTS\\FRIZQT__.TTF", 12, "OUTLINE") -- General text settings
-itemLevelFrame.textFeet:SetTextColor(1, 1, 0, 1) -- Yellow
-itemLevelFrame.textFeet:SetPoint("CENTER", rightColumn, row4) -- Anchor the text display and make it the same size as the frame
-frameTextObjects[10] = itemLevelFrame.textFeet;
+itemLevelFrame.textFeet = itemLevelFrame:CreateFontString(nil, "OVERLAY")
+itemLevelFrame.textFeet:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+itemLevelFrame.textFeet:SetTextColor(1, 1, 0, 1)
+itemLevelFrame.textFeet:SetPoint("CENTER", rightColumn, row4) 
+frameTextObjects[GetInventorySlotInfo("FeetSlot")] = itemLevelFrame.textFeet;
 
-itemLevelFrame.textRing1 = itemLevelFrame:CreateFontString(nil, "OVERLAY") -- Add a text display widget (FontString)
-itemLevelFrame.textRing1:SetFont("FONTS\\FRIZQT__.TTF", 12, "OUTLINE") -- General text settings
-itemLevelFrame.textRing1:SetTextColor(1, 1, 0, 1) -- Yellow
-itemLevelFrame.textRing1:SetPoint("CENTER", rightColumn, row5) -- Anchor the text display and make it the same size as the frame
-frameTextObjects[11] = itemLevelFrame.textRing1;
+itemLevelFrame.textRing1 = itemLevelFrame:CreateFontString(nil, "OVERLAY")
+itemLevelFrame.textRing1:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+itemLevelFrame.textRing1:SetTextColor(1, 1, 0, 1)
+itemLevelFrame.textRing1:SetPoint("CENTER", rightColumn, row5) 
+frameTextObjects[GetInventorySlotInfo("Finger0Slot")] = itemLevelFrame.textRing1;
 
-itemLevelFrame.textRing2 = itemLevelFrame:CreateFontString(nil, "OVERLAY") -- Add a text display widget (FontString)
-itemLevelFrame.textRing2:SetFont("FONTS\\FRIZQT__.TTF", 12, "OUTLINE") -- General text settings
-itemLevelFrame.textRing2:SetTextColor(1, 1, 0, 1) -- Yellow
-itemLevelFrame.textRing2:SetPoint("CENTER", rightColumn, row6) -- Anchor the text display and make it the same size as the frame
-frameTextObjects[12] = itemLevelFrame.textRing2;
+itemLevelFrame.textRing2 = itemLevelFrame:CreateFontString(nil, "OVERLAY")
+itemLevelFrame.textRing2:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+itemLevelFrame.textRing2:SetTextColor(1, 1, 0, 1)
+itemLevelFrame.textRing2:SetPoint("CENTER", rightColumn, row6) 
+frameTextObjects[GetInventorySlotInfo("Finger1Slot")] = itemLevelFrame.textRing2;
 
-itemLevelFrame.textTrinket1 = itemLevelFrame:CreateFontString(nil, "OVERLAY") -- Add a text display widget (FontString)
-itemLevelFrame.textTrinket1:SetFont("FONTS\\FRIZQT__.TTF", 12, "OUTLINE") -- General text settings
-itemLevelFrame.textTrinket1:SetTextColor(1, 1, 0, 1) -- Yellow
-itemLevelFrame.textTrinket1:SetPoint("CENTER", rightColumn, row7) -- Anchor the text display and make it the same size as the frame
-frameTextObjects[13] = itemLevelFrame.textTrinket1;
+itemLevelFrame.textTrinket1 = itemLevelFrame:CreateFontString(nil, "OVERLAY")
+itemLevelFrame.textTrinket1:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+itemLevelFrame.textTrinket1:SetTextColor(1, 1, 0, 1)
+itemLevelFrame.textTrinket1:SetPoint("CENTER", rightColumn, row7) 
+frameTextObjects[GetInventorySlotInfo("Trinket0Slot")] = itemLevelFrame.textTrinket1;
 
-itemLevelFrame.textTrinket2 = itemLevelFrame:CreateFontString(nil, "OVERLAY") -- Add a text display widget (FontString)
-itemLevelFrame.textTrinket2:SetFont("FONTS\\FRIZQT__.TTF", 12, "OUTLINE") -- General text settings
-itemLevelFrame.textTrinket2:SetTextColor(1, 1, 0, 1) -- Yellow
-itemLevelFrame.textTrinket2:SetPoint("CENTER", rightColumn, row8) -- Anchor the text display and make it the same size as the frame
-frameTextObjects[14] = itemLevelFrame.textTrinket2;
+itemLevelFrame.textTrinket2 = itemLevelFrame:CreateFontString(nil, "OVERLAY")
+itemLevelFrame.textTrinket2:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+itemLevelFrame.textTrinket2:SetTextColor(1, 1, 0, 1)
+itemLevelFrame.textTrinket2:SetPoint("CENTER", rightColumn, row8) 
+frameTextObjects[GetInventorySlotInfo("Trinket1Slot")] = itemLevelFrame.textTrinket2;
 
 -- WEAPONS
-itemLevelFrame.textWeapon1 = itemLevelFrame:CreateFontString(nil, "OVERLAY") -- Add a text display widget (FontString)
-itemLevelFrame.textWeapon1:SetFont("FONTS\\FRIZQT__.TTF", 12, "OUTLINE") -- General text settings
-itemLevelFrame.textWeapon1:SetTextColor(1, 1, 0, 1) -- Yellow
-itemLevelFrame.textWeapon1:SetPoint("CENTER", weaponColumn1, weaponRow) -- Anchor the text display and make it the same size as the frame
-frameTextObjects[15] = itemLevelFrame.textWeapon1;
+itemLevelFrame.textWeapon1 = itemLevelFrame:CreateFontString(nil, "OVERLAY")
+itemLevelFrame.textWeapon1:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+itemLevelFrame.textWeapon1:SetTextColor(1, 1, 0, 1)
+itemLevelFrame.textWeapon1:SetPoint("CENTER", weaponColumn1, weaponRow) 
+frameTextObjects[GetInventorySlotInfo("MainHandSlot")] = itemLevelFrame.textWeapon1;
 
-itemLevelFrame.textWeapon2 = itemLevelFrame:CreateFontString(nil, "OVERLAY") -- Add a text display widget (FontString)
-itemLevelFrame.textWeapon2:SetFont("FONTS\\FRIZQT__.TTF", 12, "OUTLINE") -- General text settings
-itemLevelFrame.textWeapon2:SetTextColor(1, 1, 0, 1) -- Yellow
-itemLevelFrame.textWeapon2:SetPoint("CENTER", weaponColumn2, weaponRow) -- Anchor the text display and make it the same size as the frame
-frameTextObjects[16] = itemLevelFrame.textWeapon2;
+itemLevelFrame.textWeapon2 = itemLevelFrame:CreateFontString(nil, "OVERLAY")
+itemLevelFrame.textWeapon2:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+itemLevelFrame.textWeapon2:SetTextColor(1, 1, 0, 1)
+itemLevelFrame.textWeapon2:SetPoint("CENTER", weaponColumn2, weaponRow) 
+frameTextObjects[GetInventorySlotInfo("SecondaryHandSlot")] = itemLevelFrame.textWeapon2;
 
-itemLevelFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED") -- Get notified when you bags inventory changes
-itemLevelFrame:SetScript("OnEvent", function(self, event, ...) -- self=the frame the event is registered for, event=the event (for multiple events), ...=a variable number of parameters based on the event
+itemLevelFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
+itemLevelFrame:SetScript("OnEvent", function(self, event, ...)
     local equipmentSlot, isEmpty = ...;
     UpdateItemLevelForSlot(equipmentSlot, isEmpty);
+    MonkeyStuff:PrintDevMode("PLAYER_EQUIPMENT_CHANGED");
 end)
 
 function UpdateItemLevelForSlot(equipmentSlot, isEmpty)
     local text = frameTextObjects[equipmentSlot];
 
-    if (isEmpty) then text:SetText(""); return end;
+    if (isEmpty) then text:SetText("") return end;
 
     local item = Item:CreateFromEquipmentSlot(equipmentSlot)
-    if ( item ) then
+    if (item) then
         itemLevel = item:GetCurrentItemLevel()
+        text:SetText(itemLevel);
+    else
+        text:SetText("??");
     end
+end
 
-    text:SetText(itemLevel);
+function MonkeyStuff:SetAllEquippedItemLevels()
+    for slotIndex = 1, #frameTextObjects, 1 do
+        UpdateItemLevelForSlot(slotIndex, false);
+    end
 end
