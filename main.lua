@@ -379,3 +379,23 @@ function MonkeyStuff:SetAllEquippedItemLevels()
         UpdateItemLevelForSlot(slotIndex, false);
     end
 end
+
+-- Character Frame
+CharacterFrame:HookScript("OnShow", function()
+    itemLevelFrame:Show();
+end)
+
+---- Tab: Character
+CharacterFrameTab1:HookScript("OnClick", function()
+    itemLevelFrame:Show();
+end)
+
+---- Tab: Reputation
+CharacterFrameTab2:HookScript("OnClick", function()
+    itemLevelFrame:Hide();
+end)
+
+---- Tab: Currency
+CharacterFrameTab3:HookScript("OnClick", function()
+    itemLevelFrame:Hide();
+end)
