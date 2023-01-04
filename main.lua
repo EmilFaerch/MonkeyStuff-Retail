@@ -1,11 +1,13 @@
 MonkeyStuff = {};
 
-colorMain = "|cff89CFF0";
-colorMarked = "|cfffda82b";
-colorUnmarked = "|cffffffff";
+local colorMain = "|cff89CFF0";
+local colorMarked = "|cfffda82b";
+local colorUnmarked = "|cffffffff";
 
-devMode = false;
-MS_ItemsMarkedForSale = {""};
+local monkeyStuffPrefix = colorMain .. "[MonkeyStuff]|r "
+
+local devMode = false;
+local MS_ItemsMarkedForSale = {""};
 
 local MonkeyStuff_EventFrame = CreateFrame("Frame");
 MonkeyStuff_EventFrame:RegisterEvent("ADDON_LOADED");
@@ -108,9 +110,9 @@ function MonkeyStuff:Tooltip_HandleMarkForSale(tooltip, itemQuality, unitPrice, 
     local isMarkedForSale,_ = CheckItemMarkedForSale(itemLink);
 
     if (isMarkedForSale) then 
-        tooltip:AddLine(colorMarked .. "Marked for auto-sell.\nShift-Right click to unmark.");
+        tooltip:AddLine(monkeyStuffPrefix .. colorMarked .. "Marked for auto-sell. Shift-Right click to unmark.");
     else
-        tooltip:AddLine(colorUnmarked .. "Shift-Right click to mark for auto-sell.");
+        tooltip:AddLine(monkeyStuffPrefix .. colorUnmarked .. "Shift-Right click to mark for auto-sell.");
     end
 end
 
@@ -187,7 +189,7 @@ function MonkeyStuff:PrintAvailableCommands()
 end;
 
 function MonkeyStuff:Print(msg)
-    print(colorMain .. "[MonkeyStuff]|r " .. msg)
+    print(monkeyStuffPrefix .. msg)
 end;
 
 function MonkeyStuff:PrintDevMode(msg)
@@ -377,6 +379,7 @@ end
 function MonkeyStuff:SetAllEquippedItemLevels()
     for slotIndex = 1, #frameTextObjects, 1 do
         UpdateItemLevelForSlot(slotIndex, false);
+        itemLevelFrame:Show();
     end
 end
 
