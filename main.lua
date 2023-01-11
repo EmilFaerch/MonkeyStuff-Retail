@@ -9,29 +9,33 @@ local monkeyStuffPrefix = colorMain .. "[MonkeyStuff]|r "
 local devMode = false;
 local MS_ItemsMarkedForSale = {""};
 
-local MonkeyStuff_EventFrame = CreateFrame("Frame");
-MonkeyStuff_EventFrame:RegisterEvent("ADDON_LOADED");
-MonkeyStuff_EventFrame:RegisterEvent("MERCHANT_SHOW");
-MonkeyStuff_EventFrame:RegisterEvent("AUCTION_HOUSE_SHOW");
-MonkeyStuff_EventFrame:RegisterEvent("AUCTION_HOUSE_CLOSED");
+local MonkeyStuff_Frame = CreateFrame("Frame");
+MonkeyStuff_Frame:RegisterEvent("ADDON_LOADED");
+MonkeyStuff_Frame:RegisterEvent("MERCHANT_SHOW");
+MonkeyStuff_Frame:RegisterEvent("AUCTION_HOUSE_SHOW");
+MonkeyStuff_Frame:RegisterEvent("AUCTION_HOUSE_CLOSED");
+MonkeyStuff_Frame:RegisterEvent("PLAYER_ENTERING_WORLD");
+MonkeyStuff_Frame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
 
 function MS_OnEvent(self, event, ...)
     MonkeyStuff:PrintDevMode("EVENT: " .. event);
     
     if (event == "ADDON_LOADED" and ... == "MonkeyStuff") then
         MonkeyStuff:Initialize();
-    end
-
-    if (event == "MERCHANT_SHOW") then
+    elseif (event == "PLAYER_ENTERING_WORLD") then 
+        MonkeyStuff:SetAllEquippedItemLevels();
+    elseif (event == "PLAYER_EQUIPMENT_CHANGED") then
+        local equipmentSlot, isEmpty = ...;
+        MonkeyStuff:UpdateItemLevelForSlot(equipmentSlot, isEmpty);
+    elseif (event == "MERCHANT_SHOW") then
         MonkeyStuff:AutoRepair();
         MonkeyStuff:AutoSellItems();
     end
 
 end;
-MonkeyStuff_EventFrame:SetScript("OnEvent", MS_OnEvent);
+MonkeyStuff_Frame:SetScript("OnEvent", MS_OnEvent);
 
 function MonkeyStuff:Initialize()
-    MonkeyStuff:SetAllEquippedItemLevels();
     MonkeyStuff:Print("Loaded.");
 end
 
@@ -239,130 +243,131 @@ local row8 = -165;
 
 
 frameTextObjects = {""}
-local itemLevelFrame = CreateFrame("frame", "MonkeyStuff_EquipmentItemLevel", CharacterFrame) -- Create a frame to do the work
-itemLevelFrame:SetSize(50,16)
-itemLevelFrame:SetPoint("CENTER", CharacterFrame)
-itemLevelFrame:SetFrameLevel(9000)
+local MonkeyStuff_Frame = CreateFrame("frame", "MonkeyStuff_EquipmentItemLevel", CharacterFrame) -- Create a frame to do the work
+MonkeyStuff_Frame:SetSize(50,16)
+MonkeyStuff_Frame:SetPoint("CENTER", CharacterFrame)
+MonkeyStuff_Frame:SetFrameLevel(9000)
 
 -- LEFT COLUMN
-itemLevelFrame.textHead = itemLevelFrame:CreateFontString(nil, "OVERLAY")
-itemLevelFrame.textHead:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
-itemLevelFrame.textHead:SetTextColor(1, 1, 0, 1)
-itemLevelFrame.textHead:SetPoint("CENTER", leftColumn, row1) 
-frameTextObjects[GetInventorySlotInfo("HeadSlot")] = itemLevelFrame.textHead;
+MonkeyStuff_Frame.textHead = MonkeyStuff_Frame:CreateFontString(nil, "OVERLAY")
+MonkeyStuff_Frame.textHead:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+MonkeyStuff_Frame.textHead:SetTextColor(1, 1, 0, 1)
+MonkeyStuff_Frame.textHead:SetPoint("CENTER", leftColumn, row1) 
+frameTextObjects[GetInventorySlotInfo("HeadSlot")] = MonkeyStuff_Frame.textHead;
 
-itemLevelFrame.textNeck = itemLevelFrame:CreateFontString(nil, "OVERLAY")
-itemLevelFrame.textNeck:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
-itemLevelFrame.textNeck:SetTextColor(1, 1, 0, 1)
-itemLevelFrame.textNeck:SetPoint("CENTER", leftColumn, row2) 
-frameTextObjects[GetInventorySlotInfo("NeckSlot")] = itemLevelFrame.textNeck;
+MonkeyStuff_Frame.textNeck = MonkeyStuff_Frame:CreateFontString(nil, "OVERLAY")
+MonkeyStuff_Frame.textNeck:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+MonkeyStuff_Frame.textNeck:SetTextColor(1, 1, 0, 1)
+MonkeyStuff_Frame.textNeck:SetPoint("CENTER", leftColumn, row2) 
+frameTextObjects[GetInventorySlotInfo("NeckSlot")] = MonkeyStuff_Frame.textNeck;
 
-itemLevelFrame.textShoulders = itemLevelFrame:CreateFontString(nil, "OVERLAY")
-itemLevelFrame.textShoulders:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
-itemLevelFrame.textShoulders:SetTextColor(1, 1, 0, 1)
-itemLevelFrame.textShoulders:SetPoint("CENTER", leftColumn, row3) 
-frameTextObjects[GetInventorySlotInfo("ShoulderSlot")] = itemLevelFrame.textShoulders;
+MonkeyStuff_Frame.textShoulders = MonkeyStuff_Frame:CreateFontString(nil, "OVERLAY")
+MonkeyStuff_Frame.textShoulders:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+MonkeyStuff_Frame.textShoulders:SetTextColor(1, 1, 0, 1)
+MonkeyStuff_Frame.textShoulders:SetPoint("CENTER", leftColumn, row3) 
+frameTextObjects[GetInventorySlotInfo("ShoulderSlot")] = MonkeyStuff_Frame.textShoulders;
 
-itemLevelFrame.textBack= itemLevelFrame:CreateFontString(nil, "OVERLAY")
-itemLevelFrame.textBack:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
-itemLevelFrame.textBack:SetTextColor(1, 1, 0, 1)
-itemLevelFrame.textBack:SetPoint("CENTER", leftColumn, row4) 
-frameTextObjects[GetInventorySlotInfo("BackSlot")] = itemLevelFrame.textBack;
+MonkeyStuff_Frame.textBack= MonkeyStuff_Frame:CreateFontString(nil, "OVERLAY")
+MonkeyStuff_Frame.textBack:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+MonkeyStuff_Frame.textBack:SetTextColor(1, 1, 0, 1)
+MonkeyStuff_Frame.textBack:SetPoint("CENTER", leftColumn, row4) 
+frameTextObjects[GetInventorySlotInfo("BackSlot")] = MonkeyStuff_Frame.textBack;
 
-itemLevelFrame.textChest = itemLevelFrame:CreateFontString(nil, "OVERLAY")
-itemLevelFrame.textChest:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
-itemLevelFrame.textChest:SetTextColor(1, 1, 0, 1)
-itemLevelFrame.textChest:SetPoint("CENTER", leftColumn, row5) 
-frameTextObjects[GetInventorySlotInfo("ChestSlot")]= itemLevelFrame.textChest;
+MonkeyStuff_Frame.textChest = MonkeyStuff_Frame:CreateFontString(nil, "OVERLAY")
+MonkeyStuff_Frame.textChest:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+MonkeyStuff_Frame.textChest:SetTextColor(1, 1, 0, 1)
+MonkeyStuff_Frame.textChest:SetPoint("CENTER", leftColumn, row5) 
+frameTextObjects[GetInventorySlotInfo("ChestSlot")]= MonkeyStuff_Frame.textChest;
 
-itemLevelFrame.textShirt = itemLevelFrame:CreateFontString(nil, "OVERLAY")
-itemLevelFrame.textShirt:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
-itemLevelFrame.textShirt:SetTextColor(1, 1, 0, 1)
-itemLevelFrame.textShirt:SetPoint("CENTER", leftColumn, row6) 
-frameTextObjects[GetInventorySlotInfo("ShirtSlot")] = itemLevelFrame.textShirt;
+MonkeyStuff_Frame.textShirt = MonkeyStuff_Frame:CreateFontString(nil, "OVERLAY")
+MonkeyStuff_Frame.textShirt:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+MonkeyStuff_Frame.textShirt:SetTextColor(1, 1, 0, 1)
+MonkeyStuff_Frame.textShirt:SetPoint("CENTER", leftColumn, row6) 
+frameTextObjects[GetInventorySlotInfo("ShirtSlot")] = MonkeyStuff_Frame.textShirt;
 
-itemLevelFrame.textTabard = itemLevelFrame:CreateFontString(nil, "OVERLAY")
-itemLevelFrame.textTabard:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
-itemLevelFrame.textTabard:SetTextColor(1, 1, 0, 1)
-itemLevelFrame.textTabard:SetPoint("CENTER", leftColumn, row5) 
-frameTextObjects[GetInventorySlotInfo("TabardSlot")]= itemLevelFrame.textTabard;
+MonkeyStuff_Frame.textTabard = MonkeyStuff_Frame:CreateFontString(nil, "OVERLAY")
+MonkeyStuff_Frame.textTabard:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+MonkeyStuff_Frame.textTabard:SetTextColor(1, 1, 0, 1)
+MonkeyStuff_Frame.textTabard:SetPoint("CENTER", leftColumn, row5) 
+frameTextObjects[GetInventorySlotInfo("TabardSlot")]= MonkeyStuff_Frame.textTabard;
 
-itemLevelFrame.textWrist = itemLevelFrame:CreateFontString(nil, "OVERLAY")
-itemLevelFrame.textWrist:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
-itemLevelFrame.textWrist:SetTextColor(1, 1, 0, 1)
-itemLevelFrame.textWrist:SetPoint("CENTER", leftColumn, row8) 
-frameTextObjects[GetInventorySlotInfo("WristSlot")] = itemLevelFrame.textWrist;
+MonkeyStuff_Frame.textWrist = MonkeyStuff_Frame:CreateFontString(nil, "OVERLAY")
+MonkeyStuff_Frame.textWrist:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+MonkeyStuff_Frame.textWrist:SetTextColor(1, 1, 0, 1)
+MonkeyStuff_Frame.textWrist:SetPoint("CENTER", leftColumn, row8) 
+frameTextObjects[GetInventorySlotInfo("WristSlot")] = MonkeyStuff_Frame.textWrist;
 
 -- RIGHT COLUMN
-itemLevelFrame.textGloves = itemLevelFrame:CreateFontString(nil, "OVERLAY")
-itemLevelFrame.textGloves:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
-itemLevelFrame.textGloves:SetTextColor(1, 1, 0, 1)
-itemLevelFrame.textGloves:SetPoint("CENTER", rightColumn, row1) 
-frameTextObjects[GetInventorySlotInfo("HandsSlot")] = itemLevelFrame.textGloves;
+MonkeyStuff_Frame.textGloves = MonkeyStuff_Frame:CreateFontString(nil, "OVERLAY")
+MonkeyStuff_Frame.textGloves:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+MonkeyStuff_Frame.textGloves:SetTextColor(1, 1, 0, 1)
+MonkeyStuff_Frame.textGloves:SetPoint("CENTER", rightColumn, row1) 
+frameTextObjects[GetInventorySlotInfo("HandsSlot")] = MonkeyStuff_Frame.textGloves;
 
-itemLevelFrame.textBelt= itemLevelFrame:CreateFontString(nil, "OVERLAY")
-itemLevelFrame.textBelt:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
-itemLevelFrame.textBelt:SetTextColor(1, 1, 0, 1)
-itemLevelFrame.textBelt:SetPoint("CENTER", rightColumn, row2) 
-frameTextObjects[GetInventorySlotInfo("WaistSlot")] = itemLevelFrame.textBelt;
+MonkeyStuff_Frame.textBelt= MonkeyStuff_Frame:CreateFontString(nil, "OVERLAY")
+MonkeyStuff_Frame.textBelt:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+MonkeyStuff_Frame.textBelt:SetTextColor(1, 1, 0, 1)
+MonkeyStuff_Frame.textBelt:SetPoint("CENTER", rightColumn, row2) 
+frameTextObjects[GetInventorySlotInfo("WaistSlot")] = MonkeyStuff_Frame.textBelt;
 
-itemLevelFrame.textLegs = itemLevelFrame:CreateFontString(nil, "OVERLAY")
-itemLevelFrame.textLegs:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
-itemLevelFrame.textLegs:SetTextColor(1, 1, 0, 1)
-itemLevelFrame.textLegs:SetPoint("CENTER", rightColumn, row3) 
-frameTextObjects[GetInventorySlotInfo("LegsSlot")] = itemLevelFrame.textLegs;
+MonkeyStuff_Frame.textLegs = MonkeyStuff_Frame:CreateFontString(nil, "OVERLAY")
+MonkeyStuff_Frame.textLegs:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+MonkeyStuff_Frame.textLegs:SetTextColor(1, 1, 0, 1)
+MonkeyStuff_Frame.textLegs:SetPoint("CENTER", rightColumn, row3) 
+frameTextObjects[GetInventorySlotInfo("LegsSlot")] = MonkeyStuff_Frame.textLegs;
 
-itemLevelFrame.textFeet = itemLevelFrame:CreateFontString(nil, "OVERLAY")
-itemLevelFrame.textFeet:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
-itemLevelFrame.textFeet:SetTextColor(1, 1, 0, 1)
-itemLevelFrame.textFeet:SetPoint("CENTER", rightColumn, row4) 
-frameTextObjects[GetInventorySlotInfo("FeetSlot")] = itemLevelFrame.textFeet;
+MonkeyStuff_Frame.textFeet = MonkeyStuff_Frame:CreateFontString(nil, "OVERLAY")
+MonkeyStuff_Frame.textFeet:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+MonkeyStuff_Frame.textFeet:SetTextColor(1, 1, 0, 1)
+MonkeyStuff_Frame.textFeet:SetPoint("CENTER", rightColumn, row4) 
+frameTextObjects[GetInventorySlotInfo("FeetSlot")] = MonkeyStuff_Frame.textFeet;
 
-itemLevelFrame.textRing1 = itemLevelFrame:CreateFontString(nil, "OVERLAY")
-itemLevelFrame.textRing1:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
-itemLevelFrame.textRing1:SetTextColor(1, 1, 0, 1)
-itemLevelFrame.textRing1:SetPoint("CENTER", rightColumn, row5) 
-frameTextObjects[GetInventorySlotInfo("Finger0Slot")] = itemLevelFrame.textRing1;
+MonkeyStuff_Frame.textRing1 = MonkeyStuff_Frame:CreateFontString(nil, "OVERLAY")
+MonkeyStuff_Frame.textRing1:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+MonkeyStuff_Frame.textRing1:SetTextColor(1, 1, 0, 1)
+MonkeyStuff_Frame.textRing1:SetPoint("CENTER", rightColumn, row5) 
+frameTextObjects[GetInventorySlotInfo("Finger0Slot")] = MonkeyStuff_Frame.textRing1;
 
-itemLevelFrame.textRing2 = itemLevelFrame:CreateFontString(nil, "OVERLAY")
-itemLevelFrame.textRing2:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
-itemLevelFrame.textRing2:SetTextColor(1, 1, 0, 1)
-itemLevelFrame.textRing2:SetPoint("CENTER", rightColumn, row6) 
-frameTextObjects[GetInventorySlotInfo("Finger1Slot")] = itemLevelFrame.textRing2;
+MonkeyStuff_Frame.textRing2 = MonkeyStuff_Frame:CreateFontString(nil, "OVERLAY")
+MonkeyStuff_Frame.textRing2:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+MonkeyStuff_Frame.textRing2:SetTextColor(1, 1, 0, 1)
+MonkeyStuff_Frame.textRing2:SetPoint("CENTER", rightColumn, row6) 
+frameTextObjects[GetInventorySlotInfo("Finger1Slot")] = MonkeyStuff_Frame.textRing2;
 
-itemLevelFrame.textTrinket1 = itemLevelFrame:CreateFontString(nil, "OVERLAY")
-itemLevelFrame.textTrinket1:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
-itemLevelFrame.textTrinket1:SetTextColor(1, 1, 0, 1)
-itemLevelFrame.textTrinket1:SetPoint("CENTER", rightColumn, row7) 
-frameTextObjects[GetInventorySlotInfo("Trinket0Slot")] = itemLevelFrame.textTrinket1;
+MonkeyStuff_Frame.textTrinket1 = MonkeyStuff_Frame:CreateFontString(nil, "OVERLAY")
+MonkeyStuff_Frame.textTrinket1:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+MonkeyStuff_Frame.textTrinket1:SetTextColor(1, 1, 0, 1)
+MonkeyStuff_Frame.textTrinket1:SetPoint("CENTER", rightColumn, row7) 
+frameTextObjects[GetInventorySlotInfo("Trinket0Slot")] = MonkeyStuff_Frame.textTrinket1;
 
-itemLevelFrame.textTrinket2 = itemLevelFrame:CreateFontString(nil, "OVERLAY")
-itemLevelFrame.textTrinket2:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
-itemLevelFrame.textTrinket2:SetTextColor(1, 1, 0, 1)
-itemLevelFrame.textTrinket2:SetPoint("CENTER", rightColumn, row8) 
-frameTextObjects[GetInventorySlotInfo("Trinket1Slot")] = itemLevelFrame.textTrinket2;
+MonkeyStuff_Frame.textTrinket2 = MonkeyStuff_Frame:CreateFontString(nil, "OVERLAY")
+MonkeyStuff_Frame.textTrinket2:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+MonkeyStuff_Frame.textTrinket2:SetTextColor(1, 1, 0, 1)
+MonkeyStuff_Frame.textTrinket2:SetPoint("CENTER", rightColumn, row8) 
+frameTextObjects[GetInventorySlotInfo("Trinket1Slot")] = MonkeyStuff_Frame.textTrinket2;
 
 -- WEAPONS
-itemLevelFrame.textWeapon1 = itemLevelFrame:CreateFontString(nil, "OVERLAY")
-itemLevelFrame.textWeapon1:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
-itemLevelFrame.textWeapon1:SetTextColor(1, 1, 0, 1)
-itemLevelFrame.textWeapon1:SetPoint("CENTER", weaponColumn1, weaponRow) 
-frameTextObjects[GetInventorySlotInfo("MainHandSlot")] = itemLevelFrame.textWeapon1;
+MonkeyStuff_Frame.textWeapon1 = MonkeyStuff_Frame:CreateFontString(nil, "OVERLAY")
+MonkeyStuff_Frame.textWeapon1:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+MonkeyStuff_Frame.textWeapon1:SetTextColor(1, 1, 0, 1)
+MonkeyStuff_Frame.textWeapon1:SetPoint("CENTER", weaponColumn1, weaponRow) 
+frameTextObjects[GetInventorySlotInfo("MainHandSlot")] = MonkeyStuff_Frame.textWeapon1;
 
-itemLevelFrame.textWeapon2 = itemLevelFrame:CreateFontString(nil, "OVERLAY")
-itemLevelFrame.textWeapon2:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
-itemLevelFrame.textWeapon2:SetTextColor(1, 1, 0, 1)
-itemLevelFrame.textWeapon2:SetPoint("CENTER", weaponColumn2, weaponRow) 
-frameTextObjects[GetInventorySlotInfo("SecondaryHandSlot")] = itemLevelFrame.textWeapon2;
+MonkeyStuff_Frame.textWeapon2 = MonkeyStuff_Frame:CreateFontString(nil, "OVERLAY")
+MonkeyStuff_Frame.textWeapon2:SetFont("FONTS\\FRIZQT__.TTF", iLvlFontSize, iLvlTextType)
+MonkeyStuff_Frame.textWeapon2:SetTextColor(1, 1, 0, 1)
+MonkeyStuff_Frame.textWeapon2:SetPoint("CENTER", weaponColumn2, weaponRow) 
+frameTextObjects[GetInventorySlotInfo("SecondaryHandSlot")] = MonkeyStuff_Frame.textWeapon2;
+MonkeyStuff:Print("frameTextObjects populated with " .. #frameTextObjects .. " slots");
 
-itemLevelFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
-itemLevelFrame:SetScript("OnEvent", function(self, event, ...)
-    local equipmentSlot, isEmpty = ...;
-    UpdateItemLevelForSlot(equipmentSlot, isEmpty);
-    MonkeyStuff:PrintDevMode("PLAYER_EQUIPMENT_CHANGED");
-end)
+function MonkeyStuff:SetAllEquippedItemLevels()
+    for slotIndex = 1, #frameTextObjects, 1 do
+        MonkeyStuff:UpdateItemLevelForSlot(slotIndex, false);
+        MonkeyStuff_Frame:Show();
+    end
+end
 
-function UpdateItemLevelForSlot(equipmentSlot, isEmpty)
+function MonkeyStuff:UpdateItemLevelForSlot(equipmentSlot, isEmpty)
     local text = frameTextObjects[equipmentSlot];
 
     if (isEmpty) then text:SetText("") return end;
@@ -376,29 +381,22 @@ function UpdateItemLevelForSlot(equipmentSlot, isEmpty)
     end
 end
 
-function MonkeyStuff:SetAllEquippedItemLevels()
-    for slotIndex = 1, #frameTextObjects, 1 do
-        UpdateItemLevelForSlot(slotIndex, false);
-        itemLevelFrame:Show();
-    end
-end
-
 -- Character Frame
 CharacterFrame:HookScript("OnShow", function()
-    itemLevelFrame:Show();
+    MonkeyStuff_Frame:Show();
 end)
 
 ---- Tab: Character
 CharacterFrameTab1:HookScript("OnClick", function()
-    itemLevelFrame:Show();
+    MonkeyStuff_Frame:Show();
 end)
 
 ---- Tab: Reputation
 CharacterFrameTab2:HookScript("OnClick", function()
-    itemLevelFrame:Hide();
+    MonkeyStuff_Frame:Hide();
 end)
 
 ---- Tab: Currency
 CharacterFrameTab3:HookScript("OnClick", function()
-    itemLevelFrame:Hide();
+    MonkeyStuff_Frame:Hide();
 end)
